@@ -1,0 +1,2 @@
+import {useEffect,useState} from 'react';import {api} from '../services/api';
+export default function QrImage(){const [src,setSrc]=useState('');useEffect(()=>{let url='';api.get('/member/id-card/qr',{responseType:'blob'}).then(r=>{url=URL.createObjectURL(r.data);setSrc(url)});return()=>{if(url)URL.revokeObjectURL(url)}},[]);return src?<img className="qr" src={src} alt="Membership verification QR"/>:null}

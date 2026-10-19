@@ -1,0 +1,76 @@
+.auth-temple.auth-wrap,
+.auth-temple.wizard-page {
+  background-color: #fbf5e9;
+  background-image:
+    linear-gradient(90deg, rgba(251, 245, 233, .96), rgba(251, 245, 233, .8) 45%, rgba(251, 245, 233, .3)),
+    url('/images/home-temple-background.jpeg');
+  background-position: center, center 64%;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.auth-temple.auth-wrap {
+  min-height: calc(100svh - 76px);
+  justify-items: start;
+  padding: 64px clamp(24px, 8vw, 120px);
+}
+
+.auth-temple .panel.form {
+  background: rgba(255, 253, 248, .97);
+  border-color: #dfcfb2;
+  padding: clamp(24px, 3vw, 40px);
+  box-shadow: 0 16px 48px rgba(73, 43, 32, .12);
+}
+
+.auth-temple.wizard-page {
+  max-width: none;
+  min-height: calc(100svh - 76px);
+  padding-top: 40px;
+}
+
+.auth-temple .wizard-heading {
+  padding: 22px 26px;
+  border: 1px solid #dfcfb2;
+  border-radius: 14px;
+  background: rgba(255, 253, 248, .96);
+}
+
+.auth-temple .wizard-rail {
+  padding: 18px 12px;
+  border: 1px solid #dfcfb2;
+  border-radius: 14px;
+  background: rgba(255, 253, 248, .96);
+}
+
+.auth-temple .wizard-rail::before {
+  top: 39px;
+}
+
+.auth-temple .wizard-card {
+  background: rgba(255, 253, 248, .98);
+  border-color: #dfcfb2;
+  box-shadow: 0 16px 48px rgba(73, 43, 32, .1);
+}
+
+@media (max-width: 760px) {
+  .auth-temple.auth-wrap,
+  .auth-temple.wizard-page {
+    background-image:
+      linear-gradient(rgba(251, 245, 233, .83), rgba(251, 245, 233, .65)),
+      url('/images/home-temple-background.jpeg');
+    background-position: center, center;
+  }
+
+  .auth-temple.auth-wrap {
+    justify-items: center;
+    padding: 40px 16px;
+  }
+
+  .auth-temple.wizard-page {
+    padding-top: 24px;
+  }
+
+  .auth-temple .wizard-heading {
+    padding: 20px 16px;
+  }
+}
