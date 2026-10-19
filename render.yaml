@@ -1,0 +1,56 @@
+# Paid resources: review Render's estimated charges before creating this Blueprint.
+services:
+  - type: web
+    name: purohith-api
+    runtime: docker
+    plan: 0.5c-512mb
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /actuator/health
+    disk:
+      name: private-uploads
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: DB_HOST
+        fromDatabase:
+          name: purohith-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: purohith-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: purohith-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: purohith-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: purohith-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_ADMIN_EMAIL
+        value: apbrahmanapurohithsamakya@gmail.com
+      - key: APP_ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: PRIVATE_UPLOAD_DIR
+        value: /var/data/private
+databases:
+  - name: purohith-db
+    plan: 0.1c-256mb
+    diskSizeGB: 1
+    postgresMajorVersion: "17"
+    region: singapore
+    databaseName: purohith
+    user: purohith
+    ipAllowList: []

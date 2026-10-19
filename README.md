@@ -2,6 +2,11 @@
 
 Telugu-first React + Spring Boot membership platform for Andhra Pradesh / Telangana Purohit Community.
 
+## Deployment
+
+See [Render PostgreSQL + Vercel deployment](docs/deployment.md) for account setup,
+hosting configuration, persistent uploads, and the live verification checklist.
+
 ## V7 changes
 
 ### Registration / referral logic
