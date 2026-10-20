@@ -1,0 +1,2 @@
+.reg-field .field-error,.upload-field .field-error{display:block;color:#b42318;font-size:13px;line-height:1.5;font-weight:500}
+.reg-field input[aria-invalid="true"],.reg-field select[aria-invalid="true"]{border-color:#b42318;outline-color:#b42318}

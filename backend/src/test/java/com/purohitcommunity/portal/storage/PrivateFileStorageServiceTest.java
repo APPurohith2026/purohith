@@ -56,4 +56,14 @@ class PrivateFileStorageServiceTest {
         assertThrows(NoSuchElementException.class, () -> storage.document(oversized.toString()));
         assertThrows(NoSuchElementException.class, () -> storage.document(null));
     }
+
+    @Test void refusesUploadsWhoseContentDoesNotMatchTheDeclaredType() throws Exception {
+        var storage=new PrivateFileStorageService(directory.toString());
+        var fake=new org.springframework.mock.web.MockMultipartFile("file","aadhaar.pdf","application/pdf","not a PDF".getBytes());
+        assertThrows(IllegalArgumentException.class,()->storage.storeDocument(fake,"aadhaar-front"));
+        var pngAsPdf=new org.springframework.mock.web.MockMultipartFile("file","aadhaar.pdf","application/pdf",new byte[]{(byte)137,80,78,71,13,10,26,10});
+        assertThrows(IllegalArgumentException.class,()->storage.storeDocument(pngAsPdf,"aadhaar-front"));
+        var pdf=new org.springframework.mock.web.MockMultipartFile("file","aadhaar.pdf","application/pdf","%PDF-1.4\n".getBytes());
+        assertTrue(Files.exists(Path.of(storage.storeDocument(pdf,"aadhaar-front"))));
+    }
 }

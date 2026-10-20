@@ -28,6 +28,7 @@ public class AuthController {
   private final CustomUserDetailsService userDetails;
   private final PrivateFileStorageService storage;
   private final MemberIdService memberIdService;
+  private final com.purohitcommunity.portal.service.RegistrationValidationService validation;
 
   @PostMapping(value="/register", consumes="multipart/form-data")
   @Transactional
@@ -37,12 +38,15 @@ public class AuthController {
       @RequestPart("aadhaarBack") MultipartFile aadhaarBack,
       @RequestPart("passportPhoto") MultipartFile passportPhoto
   ) {
-    String phone = r.phoneNumber().replaceAll("\\D", "");
+    validation.personal(r.registrationSource(),r.memberReferenceId());
+    validation.location(r.state(),r.district());
+    validation.phone(r.whatsappNumber());
+    String phone = validation.phone(r.phoneNumber());
     if(phone.length() < 10 || phone.length() > 15) throw new IllegalArgumentException("Invalid mobile number");
     if(users.existsByPhoneNumber(phone)) throw new IllegalArgumentException("Mobile number already registered");
 
     String aadhaar = r.aadhaarNumber().replaceAll("\\D", "");
-    var plan = plans.findByCode(r.planCode()).orElseThrow(() -> new IllegalArgumentException("Selected membership plan is not available"));
+    var plan = plans.findByCode(r.planCode()).filter(p->p.isActive()).orElseThrow(() -> new IllegalArgumentException("Selected membership plan is not available"));
 
     String frontPath = storage.storeDocument(aadhaarFront, "aadhaar-front");
     String backPath = storage.storeDocument(aadhaarBack, "aadhaar-back");

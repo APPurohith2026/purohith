@@ -59,6 +59,16 @@ public class PrivateFileStorageService {
         if (file.getSize() > MAX_BYTES) throw new IllegalArgumentException(category + " must be 5 MB or smaller");
         String contentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT);
         if (!allowedTypes.contains(contentType)) throw new IllegalArgumentException(category + " has an unsupported file type");
+        try (var input = file.getInputStream()) {
+            byte[] header = input.readNBytes(1024);
+            boolean valid = switch (contentType) {
+                case "image/png" -> header.length >= 8 && java.util.Arrays.equals(java.util.Arrays.copyOf(header,8),new byte[]{(byte)137,80,78,71,13,10,26,10});
+                case "image/jpeg" -> header.length >= 3 && header[0]==(byte)255 && header[1]==(byte)216 && header[2]==(byte)255;
+                case "application/pdf" -> new String(header,java.nio.charset.StandardCharsets.ISO_8859_1).contains("%PDF-");
+                default -> false;
+            };
+            if(!valid) throw new IllegalArgumentException(category + " content does not match its file type. Upload a valid PDF, JPG or PNG file.");
+        } catch(IOException ex) { throw new IllegalArgumentException("Could not read " + category + ". Choose the file again."); }
         String ext = switch (contentType) {
             case "image/jpeg" -> ".jpg";
             case "image/png" -> ".png";

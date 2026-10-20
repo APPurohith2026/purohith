@@ -32,6 +32,7 @@ public class RegistrationController {
   private final CustomUserDetailsService userDetails;
   private final PrivateFileStorageService storage;
   private final MemberIdService memberIdService;
+  private final com.purohitcommunity.portal.service.RegistrationValidationService validation;
 
   @PostMapping("/drafts/start")
   @Transactional
@@ -61,9 +62,11 @@ public class RegistrationController {
   @Transactional
   public DraftView step2(@PathVariable String token,@Valid @RequestBody DraftStep2Request r){
     var d=find(token);
-    String phone=normalizePhone(r.phoneNumber());
+    String phone=validation.phone(r.phoneNumber());
+    validation.phone(r.whatsappNumber());
+    validation.location(r.state(),r.district());
     if(users.existsByPhoneNumber(phone)) throw new IllegalArgumentException("Mobile number already registered");
-    d.setPhoneNumber(phone); d.setWhatsappNumber(r.whatsappNumber().trim()); d.setDoorNumber(r.doorNumber().trim());
+    d.setPhoneNumber(phone); d.setWhatsappNumber(validation.phone(r.whatsappNumber())); d.setDoorNumber(r.doorNumber().trim());
     d.setCityTown(r.cityTown().trim()); d.setConstituency(r.constituency().trim()); d.setDistrict(r.district().trim());
     d.setDistrictCode(memberIdService.districtCode(r.district())); d.setPinCode(r.pinCode()); d.setState(r.state());
     complete(d,2); return view(drafts.save(d));
@@ -76,6 +79,7 @@ public class RegistrationController {
       @RequestPart(value="aadhaarBack",required=false) MultipartFile aadhaarBack,
       @RequestPart(value="passportPhoto",required=false) MultipartFile passportPhoto){
     var d=find(token);
+    if(d.getLastCompletedStep()<2) throw new IllegalStateException("Complete address details before uploading documents");
     if(aadhaarFront!=null && !aadhaarFront.isEmpty()) d.setAadhaarFrontPath(storage.storeDocument(aadhaarFront,"draft-aadhaar-front"));
     if(aadhaarBack!=null && !aadhaarBack.isEmpty()) d.setAadhaarBackPath(storage.storeDocument(aadhaarBack,"draft-aadhaar-back"));
     if(passportPhoto!=null && !passportPhoto.isEmpty()) d.setPassportPhotoPath(storage.storeImage(passportPhoto,"draft-passport-photo"));
@@ -87,7 +91,9 @@ public class RegistrationController {
   @PutMapping("/drafts/{token}/step/4")
   @Transactional
   public DraftView step4(@PathVariable String token,@Valid @RequestBody DraftStep4Request r){
-    var d=find(token); plans.findByCode(r.planCode()).orElseThrow(() -> new IllegalArgumentException("Selected membership plan is not available"));
+    var d=find(token);
+    if(d.getLastCompletedStep()<3) throw new IllegalStateException("Complete document uploads before choosing a plan");
+    plans.findByCode(r.planCode()).filter(p->p.isActive()).orElseThrow(() -> new IllegalArgumentException("Selected membership plan is not available"));
     d.setPlanCode(r.planCode()); complete(d,4); return view(drafts.save(d));
   }
 
@@ -96,12 +102,13 @@ public class RegistrationController {
   public AuthResponse confirm(@PathVariable String token,@Valid @RequestBody DraftConfirmRequest r){
     var d=find(token);
     if(d.getLastCompletedStep()<4) throw new IllegalStateException("Complete all registration steps before submission");
+    validation.validateDraft(d);
     if(d.getPhoneNumber()==null) throw new IllegalStateException("Mobile number is missing");
     if(users.existsByPhoneNumber(d.getPhoneNumber())) throw new IllegalArgumentException("Mobile number already registered");
     if(d.getAadhaarFrontPath()==null || d.getAadhaarBackPath()==null || d.getPassportPhotoPath()==null) throw new IllegalStateException("Required documents are missing");
     if(d.getPlanCode()==null) throw new IllegalStateException("Membership plan is missing");
 
-    var plan=plans.findByCode(d.getPlanCode()).orElseThrow();
+    var plan=plans.findByCode(d.getPlanCode()).filter(p->p.isActive()).orElseThrow(() -> new IllegalArgumentException("Selected membership plan is not available"));
     var u=users.save(UserAccount.builder().phoneNumber(d.getPhoneNumber()).passwordHash(encoder.encode(r.password())).role(Role.MEMBER).enabled(true).build());
     var m=members.save(MemberProfile.builder()
         .user(u).memberReferenceId(d.getMemberReferenceId()).registrationSource(d.getRegistrationSource()).referrerMember(d.getRegistrationSource()==RegistrationSource.MEMBER_REFERENCE?validReferrer(d.getMemberReferenceId()):null).fullNameTelugu(d.getFullName()).fullNameEnglish(d.getFullName())
@@ -126,8 +133,8 @@ public class RegistrationController {
 
   private RegistrationDraft find(String token){ return drafts.findByDraftTokenAndSubmittedFalse(token).orElseThrow(() -> new IllegalArgumentException("Registration draft not found or already submitted")); }
   private void complete(RegistrationDraft d,int step){ d.setLastCompletedStep(Math.max(d.getLastCompletedStep()==null?0:d.getLastCompletedStep(),step)); }
-  private String normalizePhone(String value){ String phone=value.replaceAll("\\D",""); if(phone.length()<10 || phone.length()>15) throw new IllegalArgumentException("Invalid mobile number"); return phone; }
   private void applyStep1(RegistrationDraft d,DraftStep1Request r){
+    validation.personal(r.registrationSource(),r.memberReferenceId());
     RegistrationSource source=r.registrationSource()==null?RegistrationSource.DIRECT:r.registrationSource();
     String reference=r.memberReferenceId()==null?null:r.memberReferenceId().trim().toUpperCase();
     if(source==RegistrationSource.MEMBER_REFERENCE){

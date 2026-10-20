@@ -7,6 +7,10 @@ import java.util.*;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+  @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+  ResponseEntity<?> unreadable(org.springframework.http.converter.HttpMessageNotReadableException ex){
+    return ResponseEntity.badRequest().body(Map.of("message","Invalid request. Use valid field values and a date in YYYY-MM-DD format with a four-digit year."));
+  }
   @ExceptionHandler({IllegalArgumentException.class,IllegalStateException.class})
   ResponseEntity<?> bad(RuntimeException ex){ return ResponseEntity.badRequest().body(Map.of("timestamp",Instant.now(),"message",ex.getMessage())); }
   @ExceptionHandler(NoSuchElementException.class)

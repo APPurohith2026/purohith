@@ -32,6 +32,13 @@ public class MemberIdService {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replace('–','-');
     }
 
+    public void validateLocation(String state,String district){
+        String selectedState=stateCode(state);
+        String code=districtCode(district);
+        Set<String> telangana=Set.of("ADB","BKG","HNK","HYD","JGL","JGN","JSB","JOG","KMR","KRM","KHM","KBA","MBD","MBN","MCL","MDK","MCM","MLG","NGK","NLG","NRP","NRM","NZB","PDL","RJS","RRD","SGR","SDP","SRP","VKB","WNP","WRG","YBG");
+        if(!selectedState.equals(telangana.contains(code)?"TS":"AP")) throw new IllegalArgumentException("District does not belong to the selected state");
+    }
+
     private static Map<String,String> createDistrictCodes() {
         Map<String,String> m = new HashMap<>();
         put(m,"Alluri Sitharama Raju","ASR"); put(m,"Anakapalli","AKP"); put(m,"Ananthapuramu","ATP"); put(m,"Annamayya","ANN");

@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 test('registration omits Pravara and submits with the six remaining declarations',async({page})=>{
-  const draft={draftToken:'test-draft',lastCompletedStep:4,fullName:'Test Member',state:'Andhra Pradesh',district:'East Godavari',planCode:'PREMIUM'};
+  const draft={draftToken:'test-draft',lastCompletedStep:4,fullName:'Test Member',gender:'MALE',profession:'Purohit',gotram:'Bharadwaja',dateOfBirth:'1990-01-15',aadhaarMasked:'XXXX XXXX 9012',bloodGroup:'O+',phoneNumber:'9000000001',whatsappNumber:'9000000001',doorNumber:'1',cityTown:'Rajamahendravaram',constituency:'Rajahmundry City',pinCode:'533101',state:'Andhra Pradesh',district:'East Godavari',aadhaarFrontName:'front.pdf',aadhaarBackName:'back.pdf',passportPhotoName:'photo.png',planCode:'PREMIUM'};
   await page.addInitScript(()=>localStorage.setItem('purohit_registration_draft_token','test-draft'));
   await page.route('**/api/public/plans',route=>route.fulfill({json:[]}));
   await page.route('**/api/registration/drafts/test-draft',route=>route.fulfill({json:draft}));

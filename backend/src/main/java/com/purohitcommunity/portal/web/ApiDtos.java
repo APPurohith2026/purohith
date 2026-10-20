@@ -1,6 +1,8 @@
 package com.purohitcommunity.portal.web;
 
 import jakarta.validation.constraints.*;
+import com.purohitcommunity.portal.web.validation.BirthDate;
+import com.purohitcommunity.portal.web.validation.PasswordBytes;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.Set;
@@ -13,22 +15,22 @@ public final class ApiDtos {
       @NotBlank @Size(max=140) String fullName,
       RegistrationSource registrationSource,
       @Size(max=40) String memberReferenceId,
-      @NotBlank @Size(max=20) String gender,
+      @NotBlank @Pattern(regexp="MALE|FEMALE|OTHER", message="Choose a valid gender") String gender,
       @NotBlank @Size(max=120) String profession,
       @NotBlank @Size(max=120) String gotram,
       @Size(max=220) String pravara,
-      @NotNull LocalDate dateOfBirth,
+      @NotNull @BirthDate LocalDate dateOfBirth,
       @NotBlank @Pattern(regexp="\\d{12}", message="Aadhaar number must contain 12 digits") String aadhaarNumber,
-      @NotBlank @Size(max=10) String bloodGroup,
-      @NotBlank @Pattern(regexp="[0-9+ -]{8,18}", message="Invalid mobile number") String phoneNumber,
-      @NotBlank @Pattern(regexp="[0-9+ -]{8,18}", message="Invalid WhatsApp number") String whatsappNumber,
+      @NotBlank @Pattern(regexp="(?:A|B|AB|O)[+-]", message="Choose a valid blood group") String bloodGroup,
+      @NotBlank @Pattern(regexp="[0-9+ -]{10,25}", message="Invalid mobile number") String phoneNumber,
+      @NotBlank @Pattern(regexp="[0-9+ -]{10,25}", message="Invalid WhatsApp number") String whatsappNumber,
       @NotBlank @Size(max=80) String doorNumber,
       @NotBlank @Size(max=100) String cityTown,
       @NotBlank @Size(max=120) String constituency,
       @NotBlank @Size(max=100) String district,
-      @NotBlank @Pattern(regexp="\\d{6}", message="PIN code must contain 6 digits") String pinCode,
+      @NotBlank @Pattern(regexp="[1-9][0-9]{5}", message="PIN code must contain 6 digits and must not start with zero") String pinCode,
       @NotBlank @Size(max=60) String state,
-      @Size(min=8,max=72) String password,
+      @NotBlank @PasswordBytes @Size(min=8,max=72) String password,
       @NotNull PlanCode planCode,
       @AssertTrue(message="Declaration must be accepted") boolean declarationAccepted
   ) {}
@@ -38,27 +40,27 @@ public final class ApiDtos {
       @NotBlank @Size(max=140) String fullName,
       RegistrationSource registrationSource,
       @Size(max=40) String memberReferenceId,
-      @NotBlank @Size(max=20) String gender,
+      @NotBlank @Pattern(regexp="MALE|FEMALE|OTHER", message="Choose a valid gender") String gender,
       @NotBlank @Size(max=120) String profession,
       @NotBlank @Size(max=120) String gotram,
       @Size(max=220) String pravara,
-      @NotNull LocalDate dateOfBirth,
+      @NotNull @BirthDate LocalDate dateOfBirth,
       @NotBlank @Pattern(regexp="(?:\\d{12}|__KEEP__)", message="Aadhaar number must contain 12 digits") String aadhaarNumber,
-      @NotBlank @Size(max=10) String bloodGroup
+      @NotBlank @Pattern(regexp="(?:A|B|AB|O)[+-]", message="Choose a valid blood group") String bloodGroup
   ) {}
   public record DraftStep2Request(
-      @NotBlank @Pattern(regexp="[0-9+ -]{8,18}", message="Invalid mobile number") String phoneNumber,
-      @NotBlank @Pattern(regexp="[0-9+ -]{8,18}", message="Invalid WhatsApp number") String whatsappNumber,
+      @NotBlank @Pattern(regexp="[0-9+ -]{10,25}", message="Invalid mobile number") String phoneNumber,
+      @NotBlank @Pattern(regexp="[0-9+ -]{10,25}", message="Invalid WhatsApp number") String whatsappNumber,
       @NotBlank @Size(max=80) String doorNumber,
       @NotBlank @Size(max=100) String cityTown,
       @NotBlank @Size(max=120) String constituency,
       @NotBlank @Size(max=100) String district,
-      @NotBlank @Pattern(regexp="\\d{6}", message="PIN code must contain 6 digits") String pinCode,
+      @NotBlank @Pattern(regexp="[1-9][0-9]{5}", message="PIN code must contain 6 digits and must not start with zero") String pinCode,
       @NotBlank @Size(max=60) String state
   ) {}
   public record DraftStep4Request(@NotNull PlanCode planCode) {}
   public record DraftConfirmRequest(
-      @Size(min=8,max=72) String password,
+      @NotBlank @PasswordBytes @Size(min=8,max=72) String password,
       @AssertTrue(message="Declaration must be accepted") boolean declarationAccepted
   ) {}
   public record DraftView(
@@ -100,9 +102,9 @@ public final class ApiDtos {
   public record ReferenceValidation(boolean valid, String memberNumber, String memberName, String district, String message) {}
   public record FoundingMemberRequest(
       @NotBlank String fullName,
-      @NotBlank @Pattern(regexp="[0-9+ -]{8,18}") String phoneNumber,
+      @NotBlank @Pattern(regexp="[0-9+ -]{10,25}") String phoneNumber,
       @NotBlank String state, @NotBlank String district,
-      @NotNull PlanCode planCode, @NotBlank @Size(min=8,max=72) String password
+      @NotNull PlanCode planCode, @NotBlank @PasswordBytes @Size(min=8,max=72) String password
   ) {}
   public record ApplicationActionRequest(String comment) {}
 }
