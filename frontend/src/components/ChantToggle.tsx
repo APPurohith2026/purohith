@@ -28,31 +28,32 @@ export default function ChantToggle(){
       if(event.target instanceof Element&&event.target.closest('.chant-toggle'))return;
       if(enabledRef.current)void start();
     };
-    window.addEventListener('pointerup',resume);window.addEventListener('keydown',resume);
+    window.addEventListener('pointerup',resume);window.addEventListener('click',resume);window.addEventListener('keydown',resume);
     const audio=audioRef.current;
     return ()=>{
-      window.removeEventListener('pointerup',resume);window.removeEventListener('keydown',resume);
+      window.removeEventListener('pointerup',resume);window.removeEventListener('click',resume);window.removeEventListener('keydown',resume);
       ++attemptRef.current;pendingRef.current=false;audio?.pause();
     };
   },[start]);
   function toggle(){
     const audio=audioRef.current;if(!audio)return;setError('');
-    if(enabledRef.current){
+    if(!audio.paused||pendingRef.current){
       enabledRef.current=false;setEnabled(false);++attemptRef.current;
       pendingRef.current=false;setLoading(false);audio.pause();audio.currentTime=0;
     }else{enabledRef.current=true;setEnabled(true);void start()}
   }
   return <div className="chant-control">
     <audio ref={audioRef} src="/audio/gayathri-mantra.mp3" loop preload="auto"
-      onPlay={()=>{if(enabledRef.current)setPlaying(true);else audioRef.current?.pause()}}
+      onPlay={()=>{if(!enabledRef.current)audioRef.current?.pause()}}
+      onPlaying={()=>{if(enabledRef.current){setPlaying(true);setLoading(false)}else audioRef.current?.pause()}}
       onPause={()=>setPlaying(false)}
       onError={()=>{setPlaying(false);setLoading(false);setError('The chant is unavailable right now. Please try again later.')}}/>
     <button type="button" className={`chant-toggle${playing?' is-playing':''}`} onClick={toggle}
-      aria-pressed={enabled} aria-label={enabled?'Stop Gayathri chant':'Play Gayathri chant'}
+      aria-pressed={playing} aria-label={playing||loading?'Stop Gayathri chant':'Play Gayathri chant'}
       aria-describedby={error?'chant-error':undefined}
-      title={enabled&&!playing?'Sound is enabled. Playback starts after your first interaction.':'Gayathri chant'}>
+      title={enabled&&!playing?'Click to play the chant. Your browser may require a click before starting sound.':'Gayathri chant'}>
       {enabled?<Volume2 size={18} aria-hidden="true"/>:<VolumeX size={18} aria-hidden="true"/>}
-      <span>{loading?'Loading…':playing?'Sound on':enabled?'Sound ready':'Sound off'}</span>
+      <span>{loading?'Loading…':playing?'Sound on':enabled?'Tap for sound':'Sound off'}</span>
     </button>
     {error&&<span id="chant-error" className="chant-error" role="status">{error}</span>}
   </div>;
