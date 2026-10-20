@@ -69,7 +69,7 @@ test(
       .getByTestId('confirm-password')
       .fill(PASSWORD);
 
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 6; i++) {
       await page
         .getByTestId(`declaration-${i}`)
         .check();

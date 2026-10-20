@@ -12,6 +12,16 @@ public class AdminController {
   private final PortalService portal;
   private final com.purohitcommunity.portal.storage.PrivateFileStorageService storage;
   @GetMapping("/members/{id}/passport-photo") public org.springframework.http.ResponseEntity<byte[]> passportPhoto(@PathVariable Long id){ return storage.passportPhoto(portal.member(id).passportPhotoPath()); }
+  @GetMapping("/members/{id}/documents/{type}")
+  public org.springframework.http.ResponseEntity<byte[]> document(@PathVariable Long id,@PathVariable String type){
+    var member=portal.member(id);
+    String path=switch(type){
+      case "aadhaar-front" -> member.aadhaarFrontPath();
+      case "aadhaar-back" -> member.aadhaarBackPath();
+      default -> throw new NoSuchElementException();
+    };
+    return storage.document(path);
+  }
   @GetMapping("/dashboard") public AdminDashboard dashboard(){ return portal.adminDashboard(); }
   @GetMapping("/stats") public AdminStats stats(){ return portal.stats(); }
   @GetMapping("/applications") public List<MemberView> applications(@RequestParam(required=false) ApplicationStatus status){ return portal.applications(status); }

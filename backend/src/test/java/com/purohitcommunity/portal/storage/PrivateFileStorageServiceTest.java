@@ -31,4 +31,29 @@ class PrivateFileStorageServiceTest {
         assertThrows(NoSuchElementException.class, () -> storage.passportPhoto(null));
         assertThrows(NoSuchElementException.class, () -> storage.passportPhoto(root.resolve("missing.png").toString()));
     }
+
+    @Test void returnsPrivatePdfButDoesNotTreatItAsPassportPhoto() throws Exception {
+        var storage = new PrivateFileStorageService(directory.toString());
+        var file = directory.resolve("aadhaar.pdf");
+        Files.writeString(file, "%PDF-1.4 test");
+        var response = storage.document(file.toString());
+        assertEquals(MediaType.APPLICATION_PDF, response.getHeaders().getContentType());
+        assertEquals("no-store", response.getHeaders().getCacheControl());
+        assertEquals("nosniff", response.getHeaders().getFirst("X-Content-Type-Options"));
+        assertThrows(NoSuchElementException.class, () -> storage.passportPhoto(file.toString()));
+    }
+
+    @Test void documentsRejectOutsidePathsUnsupportedTypesAndOversizedFiles() throws Exception {
+        var storage = new PrivateFileStorageService(directory.resolve("private").toString());
+        var outside = directory.resolve("outside.pdf");
+        Files.writeString(outside, "%PDF");
+        assertThrows(NoSuchElementException.class, () -> storage.document(outside.toString()));
+        var html = directory.resolve("private/unsafe.html");
+        Files.writeString(html, "<script>alert(1)</script>");
+        assertThrows(NoSuchElementException.class, () -> storage.document(html.toString()));
+        var oversized = directory.resolve("private/large.pdf");
+        Files.write(oversized, new byte[5 * 1024 * 1024 + 1]);
+        assertThrows(NoSuchElementException.class, () -> storage.document(oversized.toString()));
+        assertThrows(NoSuchElementException.class, () -> storage.document(null));
+    }
 }

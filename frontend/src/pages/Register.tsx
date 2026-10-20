@@ -6,14 +6,14 @@ import {useAuth} from '../context/AuthContext';
 import {ArrowLeft,ArrowRight,CheckCircle2,FileText,Home,IdCard,LockKeyhole,Save,Upload,UserRound} from 'lucide-react';
 
 type RegistrationForm = {
-  fullName:string; registrationSource:'DIRECT'|'MEMBER_REFERENCE'; memberReferenceId:string; gender:string; profession:string; gotram:string; pravara:string; dateOfBirth:string;
+  fullName:string; registrationSource:'DIRECT'|'MEMBER_REFERENCE'; memberReferenceId:string; gender:string; profession:string; gotram:string;  dateOfBirth:string;
   aadhaarNumber:string; bloodGroup:string; phoneNumber:string; whatsappNumber:string; doorNumber:string;
   cityTown:string; constituency:string; district:string; pinCode:string; state:string; password:string;
   confirmPassword:string; planCode:'PREMIUM'|'ELITE'|'';
 };
 type DistrictOption={name:string;code:string};
 type DraftView={
-  draftToken:string;lastCompletedStep:number;fullName?:string;registrationSource?:'DIRECT'|'MEMBER_REFERENCE';memberReferenceId?:string;gender?:string;profession?:string;gotram?:string;pravara?:string;
+  draftToken:string;lastCompletedStep:number;fullName?:string;registrationSource?:'DIRECT'|'MEMBER_REFERENCE';memberReferenceId?:string;gender?:string;profession?:string;gotram?:string;
   dateOfBirth?:string;aadhaarMasked?:string;bloodGroup?:string;phoneNumber?:string;whatsappNumber?:string;doorNumber?:string;cityTown?:string;
   constituency?:string;district?:string;districtCode?:string;pinCode?:string;state?:string;aadhaarFrontName?:string;aadhaarBackName?:string;passportPhotoName?:string;
   planCode?:'PREMIUM'|'ELITE';
@@ -36,7 +36,7 @@ const DISTRICTS:Record<string,DistrictOption[]>={
 };
 
 const initial:RegistrationForm={
-  fullName:'',registrationSource:'DIRECT',memberReferenceId:'',gender:'',profession:'',gotram:'',pravara:'',dateOfBirth:'',aadhaarNumber:'',bloodGroup:'',
+  fullName:'',registrationSource:'DIRECT',memberReferenceId:'',gender:'',profession:'',gotram:'',dateOfBirth:'',aadhaarNumber:'',bloodGroup:'',
   phoneNumber:'',whatsappNumber:'',doorNumber:'',cityTown:'',constituency:'',district:'',pinCode:'',state:'',password:'',confirmPassword:'',planCode:''
 };
 const steps=[['01','వ్యక్తిగత వివరాలు'],['02','చిరునామా'],['03','పత్రాలు'],['04','సభ్యత్వం'],['05','సమీక్ష & సమర్పణ']] as const;
@@ -52,7 +52,7 @@ export default function Register(){
   const [aadhaarMasked,setAadhaarMasked]=useState('');
   const [aadhaarFront,setAadhaarFront]=useState<File|null>(null),[aadhaarBack,setAadhaarBack]=useState<File|null>(null),[passportPhoto,setPassportPhoto]=useState<File|null>(null);
   const [savedDocs,setSavedDocs]=useState({aadhaarFrontName:'',aadhaarBackName:'',passportPhotoName:''});
-  const [declarationChecks,setDeclarationChecks]=useState<boolean[]>(()=>Array(7).fill(false));
+  const [declarationChecks,setDeclarationChecks]=useState<boolean[]>(()=>Array(6).fill(false));
   const [err,setErr]=useState(''),[notice,setNotice]=useState(''),[saving,setSaving]=useState(false),[loadingDraft,setLoadingDraft]=useState(!!draftToken);
 
   useEffect(()=>{api.get('/public/plans').then(r=>setPlans(r.data)).catch(()=>setErr('సభ్యత్వ పథకాలు లోడ్ కాలేదు. బ్యాక్‌ఎండ్ నడుస్తుందో చూడండి.'))},[]);
@@ -63,7 +63,7 @@ export default function Register(){
 
   function hydrate(d:DraftView){
     setF(x=>({...x,
-      fullName:d.fullName||'',registrationSource:d.registrationSource||'DIRECT',memberReferenceId:d.memberReferenceId||'',gender:d.gender||'',profession:d.profession||'',gotram:d.gotram||'',pravara:d.pravara||'',dateOfBirth:d.dateOfBirth||'',bloodGroup:d.bloodGroup||'',
+      fullName:d.fullName||'',registrationSource:d.registrationSource||'DIRECT',memberReferenceId:d.memberReferenceId||'',gender:d.gender||'',profession:d.profession||'',gotram:d.gotram||'',dateOfBirth:d.dateOfBirth||'',bloodGroup:d.bloodGroup||'',
       phoneNumber:d.phoneNumber||'',whatsappNumber:d.whatsappNumber||'',doorNumber:d.doorNumber||'',cityTown:d.cityTown||'',constituency:d.constituency||'',district:d.district||'',pinCode:d.pinCode||'',state:d.state||'',planCode:d.planCode||''
     }));
     if(d.aadhaarMasked){setAadhaarSaved(true);setAadhaarMasked(d.aadhaarMasked)}
@@ -99,7 +99,7 @@ export default function Register(){
     try{
       let d:DraftView;
       if(current===1){
-        const body={fullName:f.fullName,registrationSource:f.registrationSource,memberReferenceId:f.registrationSource==='MEMBER_REFERENCE'?f.memberReferenceId:'',gender:f.gender,profession:f.profession,gotram:f.gotram,pravara:f.pravara,dateOfBirth:f.dateOfBirth,aadhaarNumber:f.aadhaarNumber||'__KEEP__',bloodGroup:f.bloodGroup};
+        const body={fullName:f.fullName,registrationSource:f.registrationSource,memberReferenceId:f.registrationSource==='MEMBER_REFERENCE'?f.memberReferenceId:'',gender:f.gender,profession:f.profession,gotram:f.gotram,dateOfBirth:f.dateOfBirth,aadhaarNumber:f.aadhaarNumber||'__KEEP__',bloodGroup:f.bloodGroup};
         if(!draftToken){const r=await api.post('/registration/drafts/start',body);d=r.data;setDraftToken(d.draftToken);localStorage.setItem(DRAFT_KEY,d.draftToken)}
         else d=(await api.put(`/registration/drafts/${draftToken}/step/1`,body)).data;
         if(f.aadhaarNumber){setAadhaarSaved(true);setAadhaarMasked('XXXX XXXX '+f.aadhaarNumber.slice(-4));set('aadhaarNumber','')}
@@ -154,7 +154,6 @@ export default function Register(){
           <Field n="06" label="పుట్టిన తేదీ *"><input data-testid="date-of-birth" type="date" value={f.dateOfBirth} onChange={e=>set('dateOfBirth',e.target.value)}/></Field>
           <Field n="07" label="ఆధార్ సంఖ్య *"><input data-testid="aadhaar-number" inputMode="numeric" maxLength={12} value={f.aadhaarNumber} onChange={e=>set('aadhaarNumber',e.target.value.replace(/\D/g,''))} placeholder={aadhaarSaved?`${aadhaarMasked} — మార్చాలంటే కొత్త సంఖ్య నమోదు చేయండి`:'12 అంకెల ఆధార్ సంఖ్య'}/></Field>
           <Field n="08" label="రక్త గ్రూప్ *"><select data-testid="blood-group" value={f.bloodGroup} onChange={e=>set('bloodGroup',e.target.value)}><option value="">రక్త గ్రూప్ ఎంచుకోండి</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(x=><option key={x}>{x}</option>)}</select></Field>
-          <Field n="09" label="ప్రవర"><input data-testid="pravara" value={f.pravara} onChange={e=>set('pravara',e.target.value)} placeholder="అవసరమైతే ప్రవర నమోదు చేయండి"/></Field>
         </div><StepActions first next={next} saveExit={saveAndExit} saving={saving}/>
       </section>}
 
@@ -190,14 +189,14 @@ export default function Register(){
       {step===5&&<section className="wizard-card">
         <Title icon={<LockKeyhole/>} telugu="సమీక్ష & సమర్పణ" english="Review & Submit" step="దశ 5 / 5"/>
         <div className="review-grid">
-          <Review title="వ్యక్తిగత వివరాలు" edit={()=>goStep(1)} rows={[["పేరు",f.fullName],["Registration",f.registrationSource==='DIRECT'?'Direct Registration':'Member Reference'],["Reference ID",f.memberReferenceId||'Not Applicable'],["లింగం",f.gender],["గోత్రం",f.gotram],["ప్రవర",f.pravara],["వృత్తి",f.profession],["పుట్టిన తేదీ",f.dateOfBirth],["ఆధార్",aadhaarMasked||'సేవ్ చేయబడింది'],["రక్త గ్రూప్",f.bloodGroup]]}/>
+          <Review title="వ్యక్తిగత వివరాలు" edit={()=>goStep(1)} rows={[["పేరు",f.fullName],["Registration",f.registrationSource==='DIRECT'?'Direct Registration':'Member Reference'],["Reference ID",f.memberReferenceId||'Not Applicable'],["లింగం",f.gender],["గోత్రం",f.gotram],["వృత్తి",f.profession],["పుట్టిన తేదీ",f.dateOfBirth],["ఆధార్",aadhaarMasked||'సేవ్ చేయబడింది'],["రక్త గ్రూప్",f.bloodGroup]]}/>
           <Review title="చిరునామా & సంప్రదింపు" edit={()=>goStep(2)} rows={[["మొబైల్",f.phoneNumber],["WhatsApp",f.whatsappNumber],["డోర్ నంబర్",f.doorNumber],["నగరం / పట్టణం",f.cityTown],["నియోజకవర్గం",f.constituency],["జిల్లా",f.district],["రాష్ట్రం",f.state],["PIN",f.pinCode]]}/>
           <Review title="పత్రాలు" edit={()=>goStep(3)} rows={[["ఆధార్ ముందు",savedDocs.aadhaarFrontName||'Uploaded'],["ఆధార్ వెనుక",savedDocs.aadhaarBackName||'Uploaded'],["పాస్‌పోర్ట్ ఫోటో",savedDocs.passportPhotoName||'Uploaded']]}/>
           <Review title="సభ్యత్వం" edit={()=>goStep(4)} rows={[["పథకం",f.planCode||'—']]}/>
         </div>
         <div className="account-block"><h3>లాగిన్ వివరాలు</h3><p className="muted">నమోదు పూర్తయిన తర్వాత మొబైల్ నంబర్ + పాస్‌వర్డ్‌తో login చేయవచ్చు. Admin approval తర్వాత Generated Member ID + అదే పాస్‌వర్డ్‌తో కూడా login చేయవచ్చు.</p><div className="registration-fields compact"><Field n="01" label="పాస్‌వర్డ్ *"><input data-testid="password" type="password" minLength={8} value={f.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password"/></Field><Field n="02" label="పాస్‌వర్డ్ నిర్ధారించండి *"><input data-testid="confirm-password" type="password" minLength={8} value={f.confirmPassword} onChange={e=>set('confirmPassword',e.target.value)} autoComplete="new-password"/></Field></div>
           <div className="declaration-panel"><h3>ప్రకటన / Declaration</h3><p>క్రింది ప్రతి అంశాన్ని పూర్తిగా చదివి అంగీకరించిన తర్వాత మాత్రమే నమోదు పూర్తి చేయండి.</p>{[
-            'నేను బ్రాహ్మణ సామాజిక వర్గానికి చెందినవాడినై, పురోహిత వృత్తిలో ఉన్నాను.','అవి అవాస్తవమని తెలిసిన యెడల సమాఖ్య తీసుకునే చర్యలకు బాధ్యత వహించగలవాడను.','నేను సమాఖ్య నిర్ణయములు శిరసావహించి నియమ నిబంధనలకు కట్టుబడి ఉంటూ గుర్తింపు కార్డును దుర్వినియోగం చేయనని నిర్ధారణ చేయుచున్నాను.','సమాఖ్య యొక్క లక్ష్యాలకు ఆకర్షితుడినై నా పూర్తి సమ్మతముతో ఎటువంటి వత్తిడి లేదా ప్రమేయం లేకుండా నేను సభ్యుడిగా చేరుచున్నాను.','నా యొక్క వివరములు ఏవైనా ఉపాధి మరియు సమాఖ్య యొక్క సమాచార నిమిత్తమై ఉపయోగం కోసం నా పూర్తి అంగీకారం తెలుపుచున్నాను.','అఖిల భారత పురోహిత బ్రాహ్మణ సమాఖ్యలో ఎటువంటి రుసుము లేకుండా ఉచిత సభ్యత్వం పొందుతున్నాను.','పైన తెలిపిన వివరాలు వాస్తవమని నిర్ధారణ చేయుచున్నాను.'
+            'నేను బ్రాహ్మణ సామాజిక వర్గానికి చెందినవాడినై, పురోహిత వృత్తిలో ఉన్నాను.','అవి అవాస్తవమని తెలిసిన యెడల సమాఖ్య తీసుకునే చర్యలకు బాధ్యత వహించగలవాడను.','నేను సమాఖ్య నిర్ణయములు శిరసావహించి నియమ నిబంధనలకు కట్టుబడి ఉంటూ గుర్తింపు కార్డును దుర్వినియోగం చేయనని నిర్ధారణ చేయుచున్నాను.','సమాఖ్య యొక్క లక్ష్యాలకు ఆకర్షితుడినై నా పూర్తి సమ్మతముతో ఎటువంటి వత్తిడి లేదా ప్రమేయం లేకుండా నేను సభ్యుడిగా చేరుచున్నాను.','నా యొక్క వివరములు ఏవైనా ఉపాధి మరియు సమాఖ్య యొక్క సమాచార నిమిత్తమై ఉపయోగం కోసం నా పూర్తి అంగీకారం తెలుపుచున్నాను.','పైన తెలిపిన వివరాలు వాస్తవమని నిర్ధారణ చేయుచున్నాను.'
           ].map((text,i)=><label className="declaration-item" key={i}><input data-testid={`declaration-${i+1}`} type="checkbox" checked={declarationChecks[i]} onChange={e=>setDeclarationChecks(x=>x.map((v,idx)=>idx===i?e.target.checked:v))}/><span><b>{i+1}.</b> {text}</span></label>)}</div>
         </div>
         <div className="wizard-final-actions"><button type="button" className="btn btn-outline btn-lg" onClick={back}><ArrowLeft/> వెనుకకు</button><button type="button" className="btn btn-outline btn-lg" onClick={saveAndExit}><Save/> సేవ్ చేసి నిష్క్రమించండి</button><button data-testid="confirm-submit" type="submit" className="btn btn-primary btn-lg" disabled={saving}>{saving?'సమర్పిస్తోంది...':'నిర్ధారించి సమర్పించండి'} <CheckCircle2/></button></div>

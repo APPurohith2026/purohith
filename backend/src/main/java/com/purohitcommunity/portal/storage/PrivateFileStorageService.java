@@ -26,6 +26,14 @@ public class PrivateFileStorageService {
     public String storeDocument(MultipartFile file, String category) { return store(file, category, DOC_TYPES); }
 
     public org.springframework.http.ResponseEntity<byte[]> passportPhoto(String storedPath) {
+        return readPrivateFile(storedPath, false);
+    }
+
+    public org.springframework.http.ResponseEntity<byte[]> document(String storedPath) {
+        return readPrivateFile(storedPath, true);
+    }
+
+    private org.springframework.http.ResponseEntity<byte[]> readPrivateFile(String storedPath, boolean allowPdf) {
         if (storedPath == null || storedPath.isBlank()) throw new java.util.NoSuchElementException();
         try {
             Path photo = Paths.get(storedPath).toAbsolutePath().normalize();
@@ -35,7 +43,8 @@ public class PrivateFileStorageService {
             }
             String name = photo.getFileName().toString().toLowerCase(Locale.ROOT);
             var type = name.endsWith(".png") ? org.springframework.http.MediaType.IMAGE_PNG
-                    : name.endsWith(".jpg") || name.endsWith(".jpeg") ? org.springframework.http.MediaType.IMAGE_JPEG : null;
+                    : name.endsWith(".jpg") || name.endsWith(".jpeg") ? org.springframework.http.MediaType.IMAGE_JPEG
+                    : allowPdf && name.endsWith(".pdf") ? org.springframework.http.MediaType.APPLICATION_PDF : null;
             if (type == null || Files.size(photo) > MAX_BYTES) throw new java.util.NoSuchElementException();
             return org.springframework.http.ResponseEntity.ok().contentType(type)
                     .cacheControl(org.springframework.http.CacheControl.noStore())

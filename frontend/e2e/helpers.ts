@@ -11,7 +11,6 @@ export async function fillStep1(page: Page, aadhaar: string) {
   await page.getByTestId('gender').selectOption('MALE');
   await page.getByTestId('profession').fill('Purohit');
   await page.getByTestId('gotram').fill('Bharadwaja');
-  await page.getByTestId('pravara').fill('Angirasa');
   await page.getByTestId('date-of-birth').fill('1990-01-15');
   await page.getByTestId('aadhaar-number').fill(aadhaar);
   await page.getByTestId('blood-group').selectOption('O+');
