@@ -29,6 +29,34 @@ class MySqlContainerSmokeTest {
   }
 
   @Autowired MemberProfileRepository members;
+  @Autowired com.purohitcommunity.portal.repository.UserAccountRepository users;
+  @Autowired com.purohitcommunity.portal.service.PasswordResetService passwordReset;
+  @Autowired org.springframework.security.crypto.password.PasswordEncoder encoder;
+  @org.springframework.test.context.bean.override.mockito.MockitoBean
+  com.purohitcommunity.portal.service.OtpSmsSender sms;
+
+  @Test void failedOtpAttemptsCommitAndSuccessfulResetCannotBeReplayed(){
+    var user=users.save(com.purohitcommunity.portal.domain.UserAccount.builder()
+        .phoneNumber("9000000001").role(com.purohitcommunity.portal.domain.Enums.Role.MEMBER)
+        .enabled(true).passwordHash(encoder.encode("OldPassword123!")).build());
+    var member=members.save(com.purohitcommunity.portal.domain.MemberProfile.builder()
+        .user(user).memberNumber("AP-EGD-000001").build());
+    try{
+      String id=passwordReset.request("AP-EGD-000001","9000000001");
+      var captured=org.mockito.ArgumentCaptor.forClass(String.class);
+      org.mockito.Mockito.verify(sms).send(org.mockito.ArgumentMatchers.eq("9000000001"),captured.capture());
+      String otp=captured.getValue(),wrong=otp.equals("000000")?"111111":"000000";
+      org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,()->passwordReset.verify(id,wrong));
+      assertEquals(1,users.findById(user.getId()).orElseThrow().getPasswordResetAttempts());
+      String token=passwordReset.verify(id,otp);
+      passwordReset.reset(id,token,"NewPassword123!");
+      org.junit.jupiter.api.Assertions.assertTrue(encoder.matches("NewPassword123!",users.findById(user.getId()).orElseThrow().getPasswordHash()));
+      org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,()->passwordReset.reset(id,token,"ReplayPassword123!"));
+    }finally{
+      members.deleteById(member.getId());
+      users.deleteById(user.getId());
+    }
+  }
 
   @Test void contextAndRepositoryWorkAgainstRealMySql(){
     assertEquals(0L, members.count());

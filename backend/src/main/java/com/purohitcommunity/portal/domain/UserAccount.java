@@ -10,6 +10,7 @@ import static com.purohitcommunity.portal.domain.Enums.Role;
 @Entity
 @Table(
         name = "users",
+        indexes = @Index(name="idx_users_password_reset_challenge", columnList="password_reset_challenge"),
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = "email"),
                 @UniqueConstraint(columnNames = "phone_number")
@@ -41,6 +42,15 @@ public class UserAccount {
 
     @Column(nullable = false)
     private boolean enabled;
+
+    @Column(length = 36) private String passwordResetChallenge;
+    private String passwordResetOtpHash;
+    private String passwordResetTokenHash;
+    private Instant passwordResetExpiresAt;
+    private Instant passwordResetLastSentAt;
+    private Instant passwordResetWindowStart;
+    @Column(nullable=false, columnDefinition="integer default 0") private int passwordResetSendCount;
+    @Column(nullable=false, columnDefinition="integer default 0") private int passwordResetAttempts;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
