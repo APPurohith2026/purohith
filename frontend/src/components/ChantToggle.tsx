@@ -1,79 +1,59 @@
-import { useEffect, useRef, useState } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {Volume2,VolumeX} from 'lucide-react';
 import './ChantToggle.css';
 
-export default function ChantToggle() {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    let disposed = false;
-    audio.volume = 0.35;
-    void audio.play().catch((reason: unknown) => {
-      // Blocked autoplay leaves the button ready for a visitor's click.
-      if (disposed || (reason instanceof DOMException &&
-        (reason.name === 'NotAllowedError' || reason.name === 'AbortError'))) return;
-      setError('The chant is unavailable right now. Please try again later.');
-    });
-    return () => {
-      disposed = true;
-      audio.pause();
+export default function ChantToggle(){
+  const audioRef=useRef<HTMLAudioElement>(null);
+  const enabledRef=useRef(true),pendingRef=useRef(false),attemptRef=useRef(0);
+  const [enabled,setEnabled]=useState(true),[playing,setPlaying]=useState(false);
+  const [loading,setLoading]=useState(false),[error,setError]=useState('');
+  const start=useCallback(async()=>{
+    const audio=audioRef.current;
+    if(!audio||!enabledRef.current||pendingRef.current||!audio.paused)return;
+    const attempt=++attemptRef.current;
+    pendingRef.current=true;setLoading(true);setError('');audio.volume=0.35;
+    try{await audio.play()}
+    catch(reason:unknown){
+      if(attempt!==attemptRef.current)return;
+      if(!(reason instanceof DOMException&&(reason.name==='NotAllowedError'||reason.name==='AbortError')))
+        setError('The chant is unavailable right now. Please try again later.');
+    }finally{
+      if(attempt===attemptRef.current){pendingRef.current=false;setLoading(false)}
+    }
+  },[]);
+  useEffect(()=>{
+    void start();
+    const resume=(event:Event)=>{
+      // Stopping must not also trigger the page's playback retry.
+      if(event.target instanceof Element&&event.target.closest('.chant-toggle'))return;
+      if(enabledRef.current)void start();
     };
-  }, []);
-  async function toggle() {
-    const audio = audioRef.current;
-    if (!audio || loading) return;
-    setError('');
-    if (!audio.paused) {
-      audio.pause();
-      audio.currentTime = 0;
-      return;
-    }
-    setLoading(true);
-    audio.volume = 0.35;
-    try {
-      await audio.play();
-    } catch {
-      setError('The chant is unavailable right now. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
+    window.addEventListener('pointerup',resume);window.addEventListener('keydown',resume);
+    const audio=audioRef.current;
+    return ()=>{
+      window.removeEventListener('pointerup',resume);window.removeEventListener('keydown',resume);
+      ++attemptRef.current;pendingRef.current=false;audio?.pause();
+    };
+  },[start]);
+  function toggle(){
+    const audio=audioRef.current;if(!audio)return;setError('');
+    if(enabledRef.current){
+      enabledRef.current=false;setEnabled(false);++attemptRef.current;
+      pendingRef.current=false;setLoading(false);audio.pause();audio.currentTime=0;
+    }else{enabledRef.current=true;setEnabled(true);void start()}
   }
-
-  return (
-    <div className="chant-control">
-      <audio
-        ref={audioRef}
-        src="/audio/gayathri-mantra.mp3"
-        loop
-        preload="auto"
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onError={() => {
-          setPlaying(false);
-          setLoading(false);
-          setError('The chant is unavailable right now. Please try again later.');
-        }}
-      />
-      <button
-        type="button"
-        className={`chant-toggle${playing ? ' is-playing' : ''}`}
-        onClick={toggle}
-        aria-pressed={playing}
-        aria-label={playing ? 'Stop Gayathri chant' : 'Play Gayathri chant'}
-        aria-describedby={error ? 'chant-error' : undefined}
-        disabled={loading}
-        title="Gayathri chant"
-      >
-        {playing ? <Volume2 size={18} aria-hidden="true" /> : <VolumeX size={18} aria-hidden="true" />}
-        <span>{loading ? 'Loading…' : playing ? 'Sound on' : 'Sound off'}</span>
-      </button>
-      {error && <span id="chant-error" className="chant-error" role="status">{error}</span>}
-    </div>
-  );
+  return <div className="chant-control">
+    <audio ref={audioRef} src="/audio/gayathri-mantra.mp3" loop preload="auto"
+      onPlay={()=>{if(enabledRef.current)setPlaying(true);else audioRef.current?.pause()}}
+      onPause={()=>setPlaying(false)}
+      onError={()=>{setPlaying(false);setLoading(false);setError('The chant is unavailable right now. Please try again later.')}}/>
+    <button type="button" className={`chant-toggle${playing?' is-playing':''}`} onClick={toggle}
+      aria-pressed={enabled} aria-label={enabled?'Stop Gayathri chant':'Play Gayathri chant'}
+      aria-describedby={error?'chant-error':undefined}
+      title={enabled&&!playing?'Sound is enabled. Playback starts after your first interaction.':'Gayathri chant'}>
+      {enabled?<Volume2 size={18} aria-hidden="true"/>:<VolumeX size={18} aria-hidden="true"/>}
+      <span>{loading?'Loading…':playing?'Sound on':enabled?'Sound ready':'Sound off'}</span>
+    </button>
+    {error&&<span id="chant-error" className="chant-error" role="status">{error}</span>}
+  </div>;
 }
