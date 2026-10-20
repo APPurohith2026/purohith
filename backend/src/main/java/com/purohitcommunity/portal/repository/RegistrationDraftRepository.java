@@ -5,4 +5,5 @@ import java.util.Optional;
 public interface RegistrationDraftRepository extends JpaRepository<RegistrationDraft,Long> {
     Optional<RegistrationDraft> findByDraftTokenAndSubmittedFalse(String draftToken);
     long countBySubmittedFalse();
+    void deleteByPhoneNumber(String phoneNumber);
 }

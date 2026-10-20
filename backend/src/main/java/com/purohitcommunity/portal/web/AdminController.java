@@ -18,6 +18,9 @@ public class AdminController {
   @GetMapping("/applications/{id}") public MemberView application(@PathVariable Long id){ return portal.member(id); }
   @GetMapping("/members") public List<MemberView> members(){ return portal.allMembers(); }
   @GetMapping("/members/{id}") public MemberView member(@PathVariable Long id){ return portal.member(id); }
+  @DeleteMapping({"/members/{id}","/applications/{id}"})
+  @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+  public void deleteMember(@PathVariable Long id){ portal.deleteMember(id); }
   @PostMapping("/members/founding") public MemberView founding(@Valid @RequestBody FoundingMemberRequest r){ return portal.createFoundingMember(r); }
   @PatchMapping("/members/{id}/approve") public MemberView approve(@PathVariable Long id,@RequestBody(required=false) ReviewRequest r){ return portal.review(id,ApplicationStatus.APPROVED,r==null?null:r.comment()); }
   @PatchMapping("/members/{id}/reject") public MemberView reject(@PathVariable Long id,@RequestBody(required=false) ReviewRequest r){ return portal.review(id,ApplicationStatus.REJECTED,r==null?null:r.comment()); }

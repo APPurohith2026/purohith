@@ -159,6 +159,23 @@ public class PortalService {
   @Transactional public ActivityView saveActivity(Long id, ActivityRequest r){
     Activity a=id==null?new Activity():activities.findById(id).orElseThrow(); a.setTitleTelugu(r.titleTelugu()); a.setTitleEnglish(r.titleEnglish()); a.setDescriptionTelugu(r.descriptionTelugu()); a.setDescriptionEnglish(r.descriptionEnglish()); a.setVenue(r.venue()); a.setStartDateTime(r.startDateTime()); a.setEndDateTime(r.endDateTime()); a.setRegistrationDeadline(r.registrationDeadline()); a.setCapacity(r.capacity()); a.setAllowedPlans(new HashSet<>(r.allowedPlans())); a.setStatus(r.status()==null?ActivityStatus.DRAFT:r.status()); a=activities.save(a); return adminActivityView(a);
   }
+  @Transactional public void deleteMember(Long id){
+    var member=members.findById(id).orElseThrow();
+    var user=member.getUser();
+    if(user.getRole()!=Role.MEMBER) throw new IllegalArgumentException("Admin accounts cannot be deleted here");
+    for(var referred:members.findByReferrerMemberId(id)){
+      referred.setReferrerMember(null);
+      referred.setMemberReferenceId(null);
+    }
+    registrations.deleteAll(registrations.findByMemberIdOrderByRegisteredAtDesc(id));
+    cards.findByMemberId(id).ifPresent(cards::delete);
+    memberships.deleteByMemberId(id);
+    if(user.getPhoneNumber()!=null) drafts.deleteByPhoneNumber(user.getPhoneNumber());
+    members.flush();
+    members.delete(member);
+    members.flush();
+    users.delete(user);
+  }
   @Transactional public void deleteActivity(Long id){ activities.deleteById(id); }
   @Transactional(readOnly=true) public List<ActivityView> publicActivities(){ return activities.findByStatusOrderByStartDateTimeAsc(ActivityStatus.PUBLISHED).stream().map(this::adminActivityView).toList(); }
   @Transactional(readOnly=true) public IdCardView verify(String token, String baseUrl){ var c=cards.findByQrTokenAndActiveTrue(token).orElseThrow(); var m=c.getMember(); var ms=memberships.findFirstByMemberIdOrderByIdDesc(m.getId()).orElseThrow(); return new IdCardView(m.getMemberNumber(),m.getFullNameEnglish(),m.getFullNameTelugu(),m.getDistrict(),ms.getPlan().getCode(),c.getIssuedOn(),c.getValidUntil(),c.getQrToken(),baseUrl+"/verify/"+token); }

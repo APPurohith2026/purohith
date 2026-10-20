@@ -13,6 +13,7 @@ public interface MemberProfileRepository
         extends JpaRepository<MemberProfile, Long> {
 
   Optional<MemberProfile> findByUserId(Long userId);
+  List<MemberProfile> findByReferrerMemberId(Long memberId);
 
   @EntityGraph(attributePaths = "user")
   Optional<MemberProfile> findByMemberNumberIgnoreCase(String memberNumber);
