@@ -1,0 +1,6 @@
+.excel-export{display:flex;flex-direction:column;gap:8px;min-width:0}
+.excel-export>small{color:#b42318;max-width:320px}
+.excel-export button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.admin-page-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;max-width:100%}
+.admin-page-head:has(.admin-page-actions){flex-wrap:wrap}
+.admin-toolbar>.excel-export{flex-shrink:0}
