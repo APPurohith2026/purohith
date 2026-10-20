@@ -1,0 +1,65 @@
+/* Keep the footer attached to the page at every viewport height. */
+#root{min-height:100vh;min-height:100svh;display:flex;flex-direction:column}
+#root>.header,#root>.footer{flex-shrink:0}
+#root>.site-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.site-main>.auth-wrap,.site-main>.wizard-page,.site-main>.auth-temple.auth-wrap,.site-main>.auth-temple.wizard-page{flex:1;min-height:0;width:100%;margin-block:0}
+.site-main>.section{width:100%;margin-block:0}
+.site-main>.admin-shell{flex:1;min-height:0}
+.admin-shell>.admin-sidebar{height:auto;max-height:calc(100svh - 76px);align-self:start}
+
+/* Size columns from the available content width, including at browser zoom. */
+.admin-main .admin-detail-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,max(340px,calc((100% - 16px)/2))),1fr))}
+.admin-detail-head{flex-wrap:wrap;gap:16px}
+.admin-detail-head>div,.admin-page-head>div,.admin-detail-card,.admin-panel-head>div{min-width:0}
+.admin-detail-head h1,.admin-page-head h1{overflow-wrap:anywhere}
+.admin-detail-card dl>div{grid-template-columns:minmax(110px,.8fr) minmax(0,1.2fr)}
+.admin-detail-card dt,.admin-detail-card dd{min-width:0;overflow-wrap:anywhere}
+.admin-panel-head,.admin-toolbar{flex-wrap:wrap}
+.admin-search{min-width:0}
+.admin-search input{min-width:0;width:100%}
+
+/* Action groups wrap instead of squeezing adjacent buttons together. */
+.admin-decision>div,.wizard-actions,.wizard-final-actions,.dashboard-actions,.actions{flex-wrap:wrap;gap:12px}
+.wizard-actions>.wizard-action-right{min-width:0;gap:12px;flex:1 1 360px}
+.wizard-action-right .btn{flex:0 1 auto}
+.admin-page-head>.btn{flex-shrink:0}
+.btn{max-width:100%;text-align:center;white-space:normal}
+.btn svg{flex-shrink:0}
+.form{display:flex;flex-direction:column}
+.form>.btn+.btn,.form>.btn+a{margin-top:12px}
+.admin-modal{max-height:calc(100svh - 32px);overflow-y:auto}
+
+.footer.footer{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);align-items:start;gap:24px 40px;width:100%}
+.footer>div,.footer>.footer-contact{min-width:0}
+.footer .organization-brand{max-width:100%}
+.footer p,.footer address{overflow-wrap:anywhere}
+
+@media(max-width:1100px){
+  .header .nav{display:none;position:absolute;top:76px;left:0;right:0;background:#fffdf8;padding:20px;flex-direction:column;align-items:stretch;gap:16px;border-bottom:1px solid #e9d6b9;max-height:calc(100svh - 76px);overflow-y:auto}
+  .header .nav.open{display:flex}
+  .header .menu-btn{display:block;flex-shrink:0;min-width:44px;min-height:44px}
+  .header .brand{min-width:0;flex-shrink:1}
+}
+@media(max-width:800px){
+  .wizard-actions{align-items:stretch}
+  .wizard-actions>.wizard-action-right{flex-basis:100%;width:100%}
+  .wizard-action-right .btn{width:100%}
+  .wizard-final-actions{display:grid;grid-template-columns:1fr}
+  .wizard-final-actions .btn{width:100%;min-width:0}
+  .footer.footer{grid-template-columns:minmax(0,1fr);gap:24px}
+}
+@media(max-width:760px){
+  .admin-shell>.admin-sidebar{max-height:none;align-self:stretch}
+  .admin-main .admin-detail-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:560px){
+  .admin-decision>div{display:grid;grid-template-columns:minmax(0,1fr)}
+  .admin-decision .btn{width:100%;min-height:44px}
+  .wizard-actions,.wizard-final-actions{position:static;padding-top:16px}
+  .header .organization-name b{font-size:14px}
+  .header .organization-name small{font-size:6px}
+}
+@media print{
+  #root,#root>.site-main{display:block;min-height:0}
+  .admin-shell>.admin-sidebar{max-height:none}
+}
