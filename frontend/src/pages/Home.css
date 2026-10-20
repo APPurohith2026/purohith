@@ -1,7 +1,10 @@
 ﻿.home-page{background:#fffdf8;--home-ink:#492b20;--home-muted:#7a6c5d}
-.hero.home-hero{min-height:710px;display:flex;align-items:center;padding:76px clamp(28px,7vw,112px);background:#fbf5e9;border-bottom:0;isolation:isolate;text-align:left}
+.hero.home-hero{position:relative;min-height:710px;display:flex;align-items:center;padding:76px clamp(28px,7vw,112px);background:#fbf5e9;border-bottom:0;isolation:isolate;text-align:left}
 .hero.home-hero::before,.hero.home-hero::after{content:none}
-.home-hero-image{position:absolute;inset:0 0 0 46%;z-index:-1;background:linear-gradient(90deg,#fbf5e9 0%,rgba(251,245,233,.38) 18%,transparent 42%),linear-gradient(0deg,rgba(48,28,13,.65),transparent 35%),url('/images/home-temple-background.jpeg') center 64%/cover no-repeat}
+.home-hero-image{position:absolute;inset:0 0 0 46%;z-index:0;overflow:hidden;pointer-events:none}
+.home-hero-image img{display:block;width:100%;height:100%;object-fit:cover;object-position:center bottom}
+.home-hero-image::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#fbf5e9 0%,rgba(251,245,233,.38) 18%,transparent 42%),linear-gradient(0deg,rgba(48,28,13,.65),transparent 35%)}
+@media(max-width:760px){.hero .home-hero-image{inset:0;background:none}.home-hero-image::after{background:linear-gradient(180deg,#fbf5e9 0%,rgba(251,245,233,.96) 42%,rgba(251,245,233,.48) 66%,rgba(48,28,13,.3) 100%)}}
 .home-hero .hero-content{max-width:600px;width:54%;margin:0}
 .home-location{display:inline-flex;align-items:center;gap:9px;padding:6px 12px;border:1px solid #dfcfb2;border-radius:30px;color:#765633;font-size:14px;background:#fffaf0}
 .home-location>span{width:6px;height:6px;border-radius:50%;background:#af7b32}
@@ -17,7 +20,7 @@
 .home-hero .btn-primary:hover{background:#873b1c}
 .home-secondary-link{display:inline-flex;align-items:center;gap:10px;color:#70452d;font-weight:700;font-size:15px;padding:10px 0}
 .home-hero .home-assurance{display:flex;align-items:center;gap:7px;color:#8a7964;font:400 11px/1.6 Inter,sans-serif;margin:26px 0 0}
-.home-image-caption{position:absolute;right:5%;bottom:36px;color:#fff3db;text-align:right;text-shadow:0 2px 10px #301c0d66}
+.home-image-caption{position:absolute;right:5%;bottom:36px;z-index:1;color:#fff3db;text-align:right;text-shadow:0 2px 10px #301c0d66}
 .home-image-caption>span{font:500 9px/1.6 Inter,sans-serif;letter-spacing:.23em}
 .home-image-caption p{font-size:23px;margin:8px 0 0}
 .home-values{display:grid;grid-template-columns:repeat(4,1fr);padding:24px clamp(28px,7vw,112px);border-block:1px solid #e8ddc9;background:#f6eedf}

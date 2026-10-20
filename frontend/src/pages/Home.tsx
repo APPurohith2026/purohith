@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="home-page">
       <section className="hero home-hero" aria-labelledby="home-title">
-        <div className="home-hero-image" aria-hidden="true" />
+        <div className="home-hero-image" aria-hidden="true"><img src="/images/home-temple-background.jpeg" alt="" loading="eager" decoding="async"/></div>
         <div className="hero-content">
           <span className="home-location"><span /> ఆంధ్రప్రదేశ్ & తెలంగాణ</span>
           <p className="home-kicker">ROOTED IN TRADITION. UNITED IN PURPOSE.</p>
