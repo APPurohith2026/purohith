@@ -1,3 +1,4 @@
+import OrganizationBrand from './OrganizationBrand';
 import { ReactNode, useEffect, useState } from 'react';
 import { api } from '../services/api';
 
@@ -24,7 +25,7 @@ export default function MemberIdCard({ member, photoEndpoint, onPhotoReady, veri
     return () => { active = false; if (url) URL.revokeObjectURL(url); };
   }, [photoEndpoint, onPhotoReady]);
   return <article className={'member-id-card ' + (member.planCode === 'ELITE' ? 'member-id-elite' : '')} aria-label="Member ID card">
-    <header><span className="id-emblem">ॐ</span><div><b>పురోహిత సమాజం</b><small>PUROHIT COMMUNITY · MEMBER IDENTITY CARD</small></div></header>
+    <header><OrganizationBrand/></header>
     <div className="id-card-body">
       <div className="id-photo">{photo ? <img src={photo} alt="Member passport photo" onLoad={() => onPhotoReady?.(true)} onError={() => { setError('Passport photo could not be displayed.'); onPhotoReady?.(false); }} /> : <span>{error || 'Loading photo…'}</span>}</div>
       <div className="id-details"><h2>{member.fullNameTelugu || member.fullNameEnglish}</h2>

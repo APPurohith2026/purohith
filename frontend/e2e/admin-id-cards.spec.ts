@@ -25,6 +25,12 @@ test('generates a photo ID card with the existing member ID and prints it', asyn
   await expect(card).toContainText('TS-HYD-000010');
   await expect(card).toContainText('Bharadwaja');
   await expect(card.getByAltText('Member passport photo')).toBeVisible();
+  const homeLogo = page.locator('.header .brand-logo');
+  const cardLogo = card.locator('.brand-logo');
+  await expect(cardLogo).toHaveAttribute('src', await homeLogo.getAttribute('src') || '');
+  await expect(cardLogo).toBeVisible();
+  await expect(card).toContainText('AP BRAHMANA PUROHIT SAMAKYA');
+  await expect(card.locator('.id-emblem')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Print / Save as PDF' })).toBeEnabled();
   await page.getByRole('button', { name: 'Print / Save as PDF' }).click();
   await expect(page.locator('body')).toHaveAttribute('data-printed', 'true');
