@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {FileText} from 'lucide-react';
 import {api} from '../services/api';
 import './AdminApplicationDocuments.css';
+import AdminPdfPreview from './AdminPdfPreview';
 
 type MemberDocuments={id:number;aadhaarFrontPath?:string;aadhaarBackPath?:string;passportPhotoPath?:string};
 
@@ -16,7 +17,7 @@ export default function AdminApplicationDocuments({member}:{member:MemberDocumen
 }
 
 function DocumentPreview({title,path,present}:{title:string;path:string;present:boolean}){
-  const [file,setFile]=useState<{url:string;type:string}|null>(null);
+  const [file,setFile]=useState<{url:string;type:string;blob:Blob}|null>(null);
   const [error,setError]=useState(''),[retry,setRetry]=useState(0);
   useEffect(()=>{
     setFile(null);setError('');
@@ -26,14 +27,15 @@ function DocumentPreview({title,path,present}:{title:string;path:string;present:
       if(controller.signal.aborted)return;
       const type=data.type.split(';')[0];
       if(!['image/jpeg','image/png','application/pdf'].includes(type))throw new Error('Unsupported file');
-      objectUrl=URL.createObjectURL(data);setFile({url:objectUrl,type});
+      objectUrl=URL.createObjectURL(data);setFile({url:objectUrl,type,blob:data});
     }).catch(()=>{if(!controller.signal.aborted)setError(`${title} could not be loaded.`)});
     return ()=>{controller.abort();if(objectUrl)URL.revokeObjectURL(objectUrl)};
   },[path,present,title,retry]);
   return <article className="admin-document" aria-label={title}><h3>{title}</h3>
     {!present?<p>Not uploaded</p>:error?<><p role="alert">{error}</p><button type="button" className="btn btn-outline" onClick={()=>setRetry(x=>x+1)}>Retry {title}</button></>:!file?<p role="status">Loading {title}…</p>:<>
-      {file.type==='application/pdf'?<iframe title={`${title} preview`} src={file.url}/>:<img alt={title} src={file.url}/>}
+      {file.type==='application/pdf'?<AdminPdfPreview blob={file.blob} title={title}/>:<img alt={title} src={file.url}/>}
       <a className="table-link" href={file.url} target="_blank" rel="noopener noreferrer">Open {title}</a>
+      {file.type==='application/pdf'&&<a className="table-link admin-document-download" href={file.url} download={`${title.toLowerCase().split(' ').join('-')}.pdf`}>Download {title}</a>}
     </>}
   </article>;
 }

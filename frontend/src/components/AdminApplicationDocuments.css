@@ -3,5 +3,13 @@
 .admin-document{min-width:0;border:1px solid #eadfce;border-radius:10px;padding:12px}
 .admin-document h3{margin:0 0 12px;color:#245792;font-size:16px}
 .admin-document img{display:block;width:100%;height:240px;object-fit:contain;background:#f5f8fc;border-radius:6px;margin-bottom:12px}
-.admin-document iframe{display:block;width:100%;height:320px;border:0;margin-bottom:12px}
+.admin-pdf-preview{margin-bottom:12px;max-height:480px;overflow:auto}
+.admin-pdf-preview canvas{width:100%;height:auto;border:1px solid #eadfce}
+.admin-pdf-preview canvas[hidden]{display:none}
+.admin-pdf-pages{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;margin-top:8px}
+.admin-pdf-pages .btn{padding:6px;font-size:12px}
+.admin-pdf-unlock label{display:flex;flex-direction:column;gap:6px}
+.admin-pdf-unlock input{width:100%;min-width:0;border:1px solid #eadfce;padding:8px;border-radius:6px}
+.admin-pdf-unlock button{margin-top:10px}
+.admin-document-download{display:block;margin-top:10px}
 @media(max-width:800px){.admin-document-grid{grid-template-columns:1fr}}
