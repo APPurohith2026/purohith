@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AP Brahmana Purohit Samakya</string>
+    <string name="title_activity_main">AP Brahmana Purohit Samakya</string>
+    <string name="package_name">com.apbrahmanapurohithsamakya.app</string>
+    <string name="custom_url_scheme">com.apbrahmanapurohithsamakya.app</string>
+</resources>

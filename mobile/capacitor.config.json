@@ -1,0 +1,12 @@
+{
+  "appId": "com.apbrahmanapurohithsamakya.app",
+  "appName": "AP Brahmana Purohit Samakya",
+  "webDir": "www",
+  "server": {
+    "hostname": "www.apbrahmanapurohithsamakya.com",
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#fffdf8"
+  }
+}
