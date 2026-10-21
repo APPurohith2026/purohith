@@ -144,7 +144,6 @@ export default function Register(){
 
   return <section className="wizard-page auth-temple">
     <div className="wizard-heading"><span>కొత్త సభ్యత్వ నమోదు</span><h1>సభ్యత్వ దరఖాస్తు</h1><p>ప్రతి దశలో <b>తదుపరి</b> నొక్కినప్పుడు వివరాలు డేటాబేస్‌లో డ్రాఫ్ట్‌గా సేవ్ అవుతాయి. మధ్యలో నిష్క్రమించినా మళ్లీ ఇదే బ్రౌజర్‌లో కొనసాగించవచ్చు.</p></div>
-    <p>After saving step 1, use your phone number and password on the Login page to continue your draft on any device.</p>
     <div className="wizard-rail">{steps.map(([n,label],i)=>{const s=i+1;return <button type="button" key={n} className={(s===step?'active ':'')+(s<step?'complete':'')} onClick={()=>s<step&&goStep(s)}><b>{s<step?'✓':n}</b><span>{label}</span></button>})}</div>
 
     <form className="wizard-shell" onSubmit={submit}>
