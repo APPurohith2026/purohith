@@ -15,7 +15,7 @@ export default function Home() {
       <section className="hero home-hero" aria-labelledby="home-title">
         <div className="home-hero-image" aria-hidden="true"><img src="/images/home-temple-background.jpeg" alt="" loading="eager" decoding="async"/></div>
         <div className="hero-content">
-          <span className="home-location"><span /> ఆంధ్రప్రదేశ్ & తెలంగాణ</span>
+          <span className="home-location"><span /> ఆంధ్రప్రదేశ్</span>
           <p className="home-kicker">ROOTED IN TRADITION. UNITED IN PURPOSE.</p>
           <h1 id="home-title">పురోహిత<br />సమాజం</h1>
           <h2>PUROHIT COMMUNITY</h2>
