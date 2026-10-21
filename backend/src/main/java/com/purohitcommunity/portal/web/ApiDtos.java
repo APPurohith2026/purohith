@@ -30,7 +30,7 @@ public final class ApiDtos {
       @NotBlank @Size(max=100) String district,
       @NotBlank @Pattern(regexp="[1-9][0-9]{5}", message="PIN code must contain 6 digits and must not start with zero") String pinCode,
       @NotBlank @Size(max=60) String state,
-      @NotBlank @PasswordBytes @Size(min=8,max=72) String password,
+      @NotBlank @PasswordBytes @Pattern(regexp="(?s).*\\S.*", message="Password cannot be blank") @Size(min=8,max=72) String password,
       @NotNull PlanCode planCode,
       @AssertTrue(message="Declaration must be accepted") boolean declarationAccepted
   ) {}
@@ -56,11 +56,12 @@ public final class ApiDtos {
       @NotBlank @Size(max=120) String constituency,
       @NotBlank @Size(max=100) String district,
       @NotBlank @Pattern(regexp="[1-9][0-9]{5}", message="PIN code must contain 6 digits and must not start with zero") String pinCode,
-      @NotBlank @Size(max=60) String state
+      @NotBlank @Size(max=60) String state,
+      @PasswordBytes @Pattern(regexp="(?s).*\\S.*", message="Password cannot be blank") @Size(min=8,max=72) String password
   ) {}
   public record DraftStep4Request(@NotNull PlanCode planCode) {}
   public record DraftConfirmRequest(
-      @NotBlank @PasswordBytes @Size(min=8,max=72) String password,
+      @PasswordBytes @Pattern(regexp="(?s).*\\S.*", message="Password cannot be blank") @Size(min=8,max=72) String password,
       @AssertTrue(message="Declaration must be accepted") boolean declarationAccepted
   ) {}
   public record DraftView(
@@ -69,7 +70,7 @@ public final class ApiDtos {
       LocalDate dateOfBirth, String aadhaarMasked, String bloodGroup,
       String phoneNumber, String whatsappNumber, String doorNumber, String cityTown, String constituency,
       String district, String districtCode, String pinCode, String state,
-      String aadhaarFrontName, String aadhaarBackName, String passportPhotoName, PlanCode planCode
+      String aadhaarFrontName, String aadhaarBackName, String passportPhotoName, PlanCode planCode, boolean draftLoginReady
   ) {}
 
   public record LoginRequest(@NotBlank String identifier, @NotBlank String password) {}
@@ -104,7 +105,7 @@ public final class ApiDtos {
       @NotBlank String fullName,
       @NotBlank @Pattern(regexp="[0-9+ -]{10,25}") String phoneNumber,
       @NotBlank String state, @NotBlank String district,
-      @NotNull PlanCode planCode, @NotBlank @PasswordBytes @Size(min=8,max=72) String password
+      @NotNull PlanCode planCode, @NotBlank @PasswordBytes @Pattern(regexp="(?s).*\\S.*", message="Password cannot be blank") @Size(min=8,max=72) String password
   ) {}
   public record ApplicationActionRequest(String comment) {}
 }

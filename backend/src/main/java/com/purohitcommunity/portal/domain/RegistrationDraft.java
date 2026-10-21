@@ -33,6 +33,10 @@ public class RegistrationDraft {
     @Column(length=12) private String aadhaarNumber;
     @Column(length=10) private String bloodGroup;
 
+    @Column(length=100) private String passwordHash;
+    @Column(unique=true,length=20) private String draftLoginPhone;
+    private Integer loginFailures;
+    private Instant loginLockedUntil;
     @Column(length=20) private String phoneNumber;
     @Column(length=20) private String whatsappNumber;
     @Column(length=80) private String doorNumber;

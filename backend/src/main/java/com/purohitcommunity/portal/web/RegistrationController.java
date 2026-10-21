@@ -23,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RegistrationController {
   private final RegistrationDraftRepository drafts;
+  private final com.purohitcommunity.portal.service.DraftLoginService draftLogin;
   private final UserAccountRepository users;
   private final MemberProfileRepository members;
   private final MembershipPlanRepository plans;
@@ -48,6 +49,9 @@ public class RegistrationController {
     return view(drafts.save(d));
   }
 
+  @PostMapping("/drafts/resume")
+  public DraftView resume(@Valid @RequestBody LoginRequest r){ return view(draftLogin.authenticate(r.identifier(),r.password())); }
+
   @GetMapping("/drafts/{token}")
   @Transactional(readOnly=true)
   public DraftView get(@PathVariable String token){ return view(find(token)); }
@@ -66,6 +70,7 @@ public class RegistrationController {
     validation.phone(r.whatsappNumber());
     validation.location(r.state(),r.district());
     if(users.existsByPhoneNumber(phone)) throw new IllegalArgumentException("Mobile number already registered");
+    draftLogin.configure(d,phone,r.password());
     d.setPhoneNumber(phone); d.setWhatsappNumber(validation.phone(r.whatsappNumber())); d.setDoorNumber(r.doorNumber().trim());
     d.setCityTown(r.cityTown().trim()); d.setConstituency(r.constituency().trim()); d.setDistrict(r.district().trim());
     d.setDistrictCode(memberIdService.districtCode(r.district())); d.setPinCode(r.pinCode()); d.setState(r.state());
@@ -109,7 +114,7 @@ public class RegistrationController {
     if(d.getPlanCode()==null) throw new IllegalStateException("Membership plan is missing");
 
     var plan=plans.findByCode(d.getPlanCode()).filter(p->p.isActive()).orElseThrow(() -> new IllegalArgumentException("Selected membership plan is not available"));
-    var u=users.save(UserAccount.builder().phoneNumber(d.getPhoneNumber()).passwordHash(encoder.encode(r.password())).role(Role.MEMBER).enabled(true).build());
+    var u=users.save(UserAccount.builder().phoneNumber(d.getPhoneNumber()).passwordHash(draftLogin.passwordHashForSubmission(d,r.password())).role(Role.MEMBER).enabled(true).build());
     var m=members.save(MemberProfile.builder()
         .user(u).memberReferenceId(d.getMemberReferenceId()).registrationSource(d.getRegistrationSource()).referrerMember(d.getRegistrationSource()==RegistrationSource.MEMBER_REFERENCE?validReferrer(d.getMemberReferenceId()):null).fullNameTelugu(d.getFullName()).fullNameEnglish(d.getFullName())
         .dateOfBirth(d.getDateOfBirth()).gender(d.getGender()).profession(d.getProfession()).gotram(d.getGotram()).pravara(d.getPravara())
@@ -119,7 +124,7 @@ public class RegistrationController {
         .declarationAccepted(r.declarationAccepted()).applicationStatus(ApplicationStatus.PENDING_REVIEW).build());
     m.setMemberNumber(memberIdService.generate(m.getState(),m.getDistrict(),m.getId())); m=members.save(m);
     memberships.save(Membership.builder().member(m).plan(plan).status(MembershipStatus.PENDING).build());
-    d.setSubmitted(true); d.setLastCompletedStep(5); drafts.save(d);
+    d.setSubmitted(true); d.setDraftLoginPhone(null); d.setPasswordHash(null); d.setLastCompletedStep(5); drafts.save(d);
     String loginId=userDetails.canonicalLogin(u);
     return new AuthResponse(jwt.generate(loginId,u.getRole().name()),u.getRole().name(),loginId,m.getMemberNumber());
   }
@@ -154,7 +159,7 @@ public class RegistrationController {
   private DraftView view(RegistrationDraft d){
     return new DraftView(d.getDraftToken(),d.getLastCompletedStep(),d.getFullName(),d.getRegistrationSource(),d.getMemberReferenceId(),d.getGender(),d.getProfession(),d.getGotram(),d.getPravara(),d.getDateOfBirth(),mask(d.getAadhaarNumber()),d.getBloodGroup(),
         d.getPhoneNumber(),d.getWhatsappNumber(),d.getDoorNumber(),d.getCityTown(),d.getConstituency(),d.getDistrict(),d.getDistrictCode(),d.getPinCode(),d.getState(),
-        fileName(d.getAadhaarFrontPath()),fileName(d.getAadhaarBackPath()),fileName(d.getPassportPhotoPath()),d.getPlanCode());
+        fileName(d.getAadhaarFrontPath()),fileName(d.getAadhaarBackPath()),fileName(d.getPassportPhotoPath()),d.getPlanCode(),d.getPasswordHash()!=null);
   }
   private String mask(String value){ return value==null||value.length()<4?null:"XXXX XXXX "+value.substring(value.length()-4); }
   private String fileName(String value){ if(value==null||value.isBlank()) return null; try{return Path.of(value).getFileName().toString();}catch(Exception e){return "Uploaded";} }

@@ -14,7 +14,7 @@ type DraftView={
   draftToken:string;lastCompletedStep:number;fullName?:string;registrationSource?:'DIRECT'|'MEMBER_REFERENCE';memberReferenceId?:string;gender?:string;profession?:string;gotram?:string;
   dateOfBirth?:string;aadhaarMasked?:string;bloodGroup?:string;phoneNumber?:string;whatsappNumber?:string;doorNumber?:string;cityTown?:string;
   constituency?:string;district?:string;districtCode?:string;pinCode?:string;state?:string;aadhaarFrontName?:string;aadhaarBackName?:string;passportPhotoName?:string;
-  planCode?:'PREMIUM'|'ELITE';
+  planCode?:'PREMIUM'|'ELITE';draftLoginReady?:boolean;
 };
 
 const DISTRICTS:Record<string,DistrictOption[]>={
@@ -47,15 +47,31 @@ export default function Register(){
   const [fieldErrors,setFieldErrors]=useState<FieldErrors>({});
   const [plans,setPlans]=useState<Plan[]>([]);
   const [draftToken,setDraftToken]=useState<string|null>(localStorage.getItem(DRAFT_KEY));
+  const [passwordSaved,setPasswordSaved]=useState(false);
   const [aadhaarSaved,setAadhaarSaved]=useState(false);
   const [aadhaarMasked,setAadhaarMasked]=useState('');
   const [aadhaarFront,setAadhaarFront]=useState<File|null>(null),[aadhaarBack,setAadhaarBack]=useState<File|null>(null),[passportPhoto,setPassportPhoto]=useState<File|null>(null);
   const [savedDocs,setSavedDocs]=useState({aadhaarFrontName:'',aadhaarBackName:'',passportPhotoName:''});
   const [declarationChecks,setDeclarationChecks]=useState<boolean[]>(()=>Array(6).fill(false));
-  const [err,setErr]=useState(''),[notice,setNotice]=useState(''),[saving,setSaving]=useState(false),[loadingDraft,setLoadingDraft]=useState(!!draftToken);
+  const [err,setErr]=useState(''),[notice,setNotice]=useState(''),[saving,setSaving]=useState(false),[loadingDraft,setLoadingDraft]=useState(!!draftToken),[draftLoadFailed,setDraftLoadFailed]=useState(false);
 
   useEffect(()=>{api.get('/public/plans').then(r=>setPlans(r.data)).catch(()=>setErr('సభ్యత్వ పథకాలు లోడ్ కాలేదు. బ్యాక్‌ఎండ్ నడుస్తుందో చూడండి.'))},[]);
-  useEffect(()=>{if(!draftToken){setLoadingDraft(false);return} api.get(`/registration/drafts/${draftToken}`).then(r=>hydrate(r.data)).catch(()=>{localStorage.removeItem(DRAFT_KEY);setDraftToken(null)}).finally(()=>setLoadingDraft(false))},[]);
+  async function loadSavedDraft(){
+    if(!draftToken){setLoadingDraft(false);return}
+    setLoadingDraft(true);setDraftLoadFailed(false);setErr('');
+    try{hydrate((await api.get(`/registration/drafts/${draftToken}`)).data)}
+    catch(e:any){
+      const status=e.response?.status,message=e.response?.data?.message;
+      if(status===400 && message==='Registration draft not found or already submitted'){
+        localStorage.removeItem(DRAFT_KEY);setDraftToken(null);
+        setNotice('The saved draft is no longer available or has already been submitted. If submitted, log in with your registered phone number.');
+      }else{
+        setDraftLoadFailed(true);
+        setErr('Your saved registration could not be loaded. Your draft has been kept. Check your connection and try again.');
+      }
+    }finally{setLoadingDraft(false)}
+  }
+  useEffect(()=>{void loadSavedDraft()},[]);
   const districtOptions=useMemo(()=>DISTRICTS[f.state]||[],[f.state]);
   const set=(k:keyof RegistrationForm,v:any)=>{setF(x=>({...x,[k]:v}));setFieldErrors(errors=>({...errors,[k.replace(/[A-Z]/g,c=>'-'+c.toLowerCase())]:''}))};
   const goStep=(n:number)=>{setErr('');setFieldErrors({});setNotice('');setStep(n);window.scrollTo({top:0,behavior:'smooth'})};
@@ -67,12 +83,13 @@ export default function Register(){
     }));
     if(d.aadhaarMasked){setAadhaarSaved(true);setAadhaarMasked(d.aadhaarMasked)}
     setSavedDocs({aadhaarFrontName:d.aadhaarFrontName||'',aadhaarBackName:d.aadhaarBackName||'',passportPhotoName:d.passportPhotoName||''});
-    setStep(Math.min(5,(d.lastCompletedStep||0)+1));
+    setPasswordSaved(d.draftLoginReady===true);
+    setStep(d.lastCompletedStep>=2&&d.draftLoginReady===false?2:Math.min(5,(d.lastCompletedStep||0)+1));
     setNotice('మునుపటి డ్రాఫ్ట్ వివరాలు తిరిగి లోడ్ అయ్యాయి.');
   }
 
   function validateStep(current=step){
-    const errors=validateRegistrationStep(f,current,{aadhaarSaved,districtNames:districtOptions.map(d=>d.name),files:[aadhaarFront,aadhaarBack,passportPhoto],savedFiles:[savedDocs.aadhaarFrontName,savedDocs.aadhaarBackName,savedDocs.passportPhotoName],declarations:declarationChecks});
+    const errors=validateRegistrationStep(f,current,{aadhaarSaved,districtNames:districtOptions.map(d=>d.name),files:[aadhaarFront,aadhaarBack,passportPhoto],savedFiles:[savedDocs.aadhaarFrontName,savedDocs.aadhaarBackName,savedDocs.passportPhotoName],declarations:declarationChecks,passwordSaved});
     setFieldErrors(errors);
     const first=Object.keys(errors)[0];
     if(first)requestAnimationFrame(()=>document.querySelector<HTMLElement>('[data-testid="'+first+'"]')?.focus());
@@ -92,7 +109,7 @@ export default function Register(){
       } else {
         if(!draftToken) throw new Error('ముందుగా వ్యక్తిగత వివరాలను సేవ్ చేయండి.');
         if(current===2){
-          d=(await api.put(`/registration/drafts/${draftToken}/step/2`,{phoneNumber:f.phoneNumber,whatsappNumber:f.whatsappNumber,doorNumber:f.doorNumber,cityTown:f.cityTown,constituency:f.constituency,district:f.district,pinCode:f.pinCode,state:f.state})).data;
+          d=(await api.put(`/registration/drafts/${draftToken}/step/2`,{phoneNumber:f.phoneNumber,whatsappNumber:f.whatsappNumber,doorNumber:f.doorNumber,cityTown:f.cityTown,constituency:f.constituency,district:f.district,pinCode:f.pinCode,state:f.state,...(!passwordSaved?{password:f.password}:{})})).data;
         }else if(current===3){
           const body=new FormData(); if(aadhaarFront)body.append('aadhaarFront',aadhaarFront);if(aadhaarBack)body.append('aadhaarBack',aadhaarBack);if(passportPhoto)body.append('passportPhoto',passportPhoto);
           d=(await api.put(`/registration/drafts/${draftToken}/step/3`,body)).data;
@@ -100,13 +117,14 @@ export default function Register(){
           setAadhaarFront(null);setAadhaarBack(null);setPassportPhoto(null);
         }else if(current===4){d=(await api.put(`/registration/drafts/${draftToken}/step/4`,{planCode:f.planCode})).data}else return true;
       }
+      if(current===2)setPasswordSaved(true);
       setNotice('✓ వివరాలు సేవ్ చేయబడ్డాయి'); return true;
     }catch(x:any){setErr((x.response?.data?.errors?Object.values(x.response.data.errors).join(' '):x.response?.data?.message)||x.message||'వివరాలు సేవ్ కాలేదు. మళ్లీ ప్రయత్నించండి.');return false}finally{setSaving(false)}
   }
 
   async function next(){if(await saveStep(step))goStep(Math.min(5,step+1))}
   function back(){goStep(Math.max(1,step-1))}
-  async function saveAndExit(){if(step<5 && !(await saveStep(step)))return;setNotice('✓ డ్రాఫ్ట్ సేవ్ చేయబడింది. మీరు తరువాత ఇదే బ్రౌజర్‌లో కొనసాగించవచ్చు.');setTimeout(()=>nav('/'),500)}
+  async function saveAndExit(){if(step<5 && !(await saveStep(step)))return;setNotice(passwordSaved||step===2?'Draft saved. Resume later from Login with your phone number and password.':'Draft saved. Continue in this browser; save step 2 to enable phone and password login.');setTimeout(()=>nav('/'),500)}
 
   async function submit(e:FormEvent){
     e.preventDefault();if(saving)return;setErr('');
@@ -115,15 +133,18 @@ export default function Register(){
     if(!draftToken){setErr('డ్రాఫ్ట్ కనబడలేదు. దయచేసి మొదటి దశ నుండి సేవ్ చేయండి.');return}
     setSaving(true);
     try{
-      const {data}=await api.post(`/registration/drafts/${draftToken}/confirm`,{password:f.password,declarationAccepted:true});
+      const {data}=await api.post(`/registration/drafts/${draftToken}/confirm`,{...(!passwordSaved?{password:f.password}:{}),declarationAccepted:true});
       localStorage.removeItem(DRAFT_KEY);setDraftToken(null);auth.login(data.token,data.role,data.loginId);nav('/dashboard',{state:{newMemberNumber:data.memberNumber}});
     }catch(x:any){setErr((x.response?.data?.errors?Object.values(x.response.data.errors).join(' '):x.response?.data?.message)||'నమోదు పూర్తి కాలేదు. దయచేసి వివరాలను తనిఖీ చేయండి.')}finally{setSaving(false)}
   }
 
   if(loadingDraft)return <section className="wizard-page auth-temple"><div className="wizard-card"><p>సేవ్ చేసిన నమోదు వివరాలు లోడ్ అవుతున్నాయి...</p></div></section>;
 
+  if(draftLoadFailed)return <section className="wizard-page auth-temple"><div className="wizard-card"><h1>Resume saved registration</h1><p role="alert">{err}</p><button type="button" className="btn btn-primary" onClick={()=>void loadSavedDraft()}>Retry loading draft</button></div></section>;
+
   return <section className="wizard-page auth-temple">
     <div className="wizard-heading"><span>కొత్త సభ్యత్వ నమోదు</span><h1>సభ్యత్వ దరఖాస్తు</h1><p>ప్రతి దశలో <b>తదుపరి</b> నొక్కినప్పుడు వివరాలు డేటాబేస్‌లో డ్రాఫ్ట్‌గా సేవ్ అవుతాయి. మధ్యలో నిష్క్రమించినా మళ్లీ ఇదే బ్రౌజర్‌లో కొనసాగించవచ్చు.</p></div>
+    <p>After saving step 2, use your phone number and password on the Login page to continue your draft on any device.</p>
     <div className="wizard-rail">{steps.map(([n,label],i)=>{const s=i+1;return <button type="button" key={n} className={(s===step?'active ':'')+(s<step?'complete':'')} onClick={()=>s<step&&goStep(s)}><b>{s<step?'✓':n}</b><span>{label}</span></button>})}</div>
 
     <form className="wizard-shell" onSubmit={submit}>
@@ -134,7 +155,7 @@ export default function Register(){
         <div className="registration-fields">
           <Field n="01" label="పూర్తి పేరు *" error={fieldErrors['full-name']}><input data-testid="full-name" maxLength={140} value={f.fullName} onChange={e=>set('fullName',e.target.value)} placeholder="మీ పూర్తి పేరు నమోదు చేయండి"/></Field>
           <div className="reg-field span-2"><i>02</i><span>నమోదు విధానం *</span><div className="source-choice"><label><input data-testid="source-direct" type="radio" checked={f.registrationSource==='DIRECT'} onChange={()=>setF(x=>({...x,registrationSource:'DIRECT',memberReferenceId:''}))}/> ప్రత్యక్ష నమోదు / Direct Registration</label><label><input data-testid="source-reference" type="radio" checked={f.registrationSource==='MEMBER_REFERENCE'} onChange={()=>set('registrationSource','MEMBER_REFERENCE')}/> సభ్యుని సూచనతో / Existing Member Reference</label></div></div>
-          {f.registrationSource==='MEMBER_REFERENCE'&&<Field n="03" label="Member Reference ID *" error={fieldErrors['member-reference-id']}><input data-testid="member-reference-id" maxLength={40} value={f.memberReferenceId} onChange={e=>set('memberReferenceId',e.target.value.toUpperCase())} placeholder="ఉదా: TS-HYD-000001"/></Field>}
+          {f.registrationSource==='MEMBER_REFERENCE'&&<Field n="03" label="Member Reference ID *" error={fieldErrors['member-reference-id']}><input data-testid="member-reference-id" maxLength={40} value={f.memberReferenceId} onChange={e=>set('memberReferenceId',e.target.value.toUpperCase())} placeholder="ఉదా: AP-EGD-000001"/></Field>}
           <Field n="03" label="లింగం *" error={fieldErrors['gender']}><select data-testid="gender" value={f.gender} onChange={e=>set('gender',e.target.value)}><option value="">లింగాన్ని ఎంచుకోండి</option><option value="MALE">పురుషుడు</option><option value="FEMALE">స్త్రీ</option><option value="OTHER">ఇతర</option></select></Field>
           <Field n="04" label="వృత్తి *" error={fieldErrors['profession']}><input data-testid="profession" maxLength={120} value={f.profession} onChange={e=>set('profession',e.target.value)} placeholder="మీ వృత్తిని నమోదు చేయండి"/></Field>
           <Field n="05" label="గోత్రం *" error={fieldErrors['gotram']}><input data-testid="gotram" maxLength={120} value={f.gotram} onChange={e=>set('gotram',e.target.value)} placeholder="మీ గోత్రం నమోదు చేయండి"/></Field>
@@ -155,7 +176,7 @@ export default function Register(){
           <Field n="06" label="రాష్ట్రం *" error={fieldErrors['state']}><select data-testid="state" value={f.state} onChange={e=>setF(x=>({...x,state:e.target.value,district:''}))}><option value="">రాష్ట్రం ఎంచుకోండి</option><option>Andhra Pradesh</option><option>Telangana</option></select></Field>
           <Field n="07" label="జిల్లా *" error={fieldErrors['district']}><select data-testid="district" value={f.district} disabled={!f.state} onChange={e=>set('district',e.target.value)}><option value="">జిల్లా ఎంచుకోండి</option>{districtOptions.map(d=><option key={d.code} value={d.name}>{d.name}</option>)}</select></Field>
           <Field n="08" label="పిన్ కోడ్ *" error={fieldErrors['pin-code']}><input data-testid="pin-code" inputMode="numeric" maxLength={6} value={f.pinCode} onChange={e=>set('pinCode',e.target.value.replace(/\D/g,''))} placeholder="6 అంకెల PIN కోడ్"/></Field>
-        </div><StepActions back={back} next={next} saveExit={saveAndExit} saving={saving}/>
+        </div><div className="account-block"><h3>Save your registration login</h3><p>Set a password now. If registration is interrupted, use your phone number and this password on the login page to continue on any device. Your permanent member ID is created after final submission.</p>{passwordSaved?<p>Your registration password is already saved.</p>:<div className="registration-fields compact"><Field n="01" label="పాస్‌వర్డ్ *" error={fieldErrors['password']}><input data-testid="password" maxLength={72} type="password" minLength={8} value={f.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password"/></Field><Field n="02" label="పాస్‌వర్డ్ నిర్ధారించండి *" error={fieldErrors['confirm-password']}><input data-testid="confirm-password" maxLength={72} type="password" minLength={8} value={f.confirmPassword} onChange={e=>set('confirmPassword',e.target.value)} autoComplete="new-password"/></Field></div>}</div><StepActions back={back} next={next} saveExit={saveAndExit} saving={saving}/>
       </section>}
 
       {step===3&&<section className="wizard-card">
@@ -181,7 +202,7 @@ export default function Register(){
           <Review title="పత్రాలు" edit={()=>goStep(3)} rows={[["ఆధార్ ముందు",savedDocs.aadhaarFrontName||'Uploaded'],["ఆధార్ వెనుక",savedDocs.aadhaarBackName||'Uploaded'],["పాస్‌పోర్ట్ ఫోటో",savedDocs.passportPhotoName||'Uploaded']]}/>
           <Review title="సభ్యత్వం" edit={()=>goStep(4)} rows={[["పథకం",f.planCode||'—']]}/>
         </div>
-        <div className="account-block"><h3>లాగిన్ వివరాలు</h3><p className="muted">నమోదు పూర్తయిన తర్వాత మొబైల్ నంబర్ + పాస్‌వర్డ్‌తో login చేయవచ్చు. Admin approval తర్వాత Generated Member ID + అదే పాస్‌వర్డ్‌తో కూడా login చేయవచ్చు.</p><div className="registration-fields compact"><Field n="01" label="పాస్‌వర్డ్ *" error={fieldErrors['password']}><input data-testid="password" maxLength={72} type="password" minLength={8} value={f.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password"/></Field><Field n="02" label="పాస్‌వర్డ్ నిర్ధారించండి *" error={fieldErrors['confirm-password']}><input data-testid="confirm-password" maxLength={72} type="password" minLength={8} value={f.confirmPassword} onChange={e=>set('confirmPassword',e.target.value)} autoComplete="new-password"/></Field></div>
+        <div className="account-block"><h3>లాగిన్ వివరాలు</h3><p className="muted">నమోదు పూర్తయిన తర్వాత మొబైల్ నంబర్ + పాస్‌వర్డ్‌తో login చేయవచ్చు. Admin approval తర్వాత Generated Member ID + అదే పాస్‌వర్డ్‌తో కూడా login చేయవచ్చు.</p><p>Your password was saved in step 2. Use the same phone number and password to resume this draft or log in after submission.</p>
           <div className="declaration-panel"><h3>ప్రకటన / Declaration</h3><p>క్రింది ప్రతి అంశాన్ని పూర్తిగా చదివి అంగీకరించిన తర్వాత మాత్రమే నమోదు పూర్తి చేయండి.</p>{[
             'నేను బ్రాహ్మణ సామాజిక వర్గానికి చెందినవాడినై, పురోహిత వృత్తిలో ఉన్నాను.','అవి అవాస్తవమని తెలిసిన యెడల సమాఖ్య తీసుకునే చర్యలకు బాధ్యత వహించగలవాడను.','నేను సమాఖ్య నిర్ణయములు శిరసావహించి నియమ నిబంధనలకు కట్టుబడి ఉంటూ గుర్తింపు కార్డును దుర్వినియోగం చేయనని నిర్ధారణ చేయుచున్నాను.','సమాఖ్య యొక్క లక్ష్యాలకు ఆకర్షితుడినై నా పూర్తి సమ్మతముతో ఎటువంటి వత్తిడి లేదా ప్రమేయం లేకుండా నేను సభ్యుడిగా చేరుచున్నాను.','నా యొక్క వివరములు ఏవైనా ఉపాధి మరియు సమాఖ్య యొక్క సమాచార నిమిత్తమై ఉపయోగం కోసం నా పూర్తి అంగీకారం తెలుపుచున్నాను.','పైన తెలిపిన వివరాలు వాస్తవమని నిర్ధారణ చేయుచున్నాను.'
           ].map((text,i)=><label className="declaration-item" key={i}><input data-testid={`declaration-${i+1}`} type="checkbox" checked={declarationChecks[i]} onChange={e=>setDeclarationChecks(x=>x.map((v,idx)=>idx===i?e.target.checked:v))}/><span><b>{i+1}.</b> {text}</span></label>)}</div>

@@ -17,7 +17,7 @@ export function uploadError(file:File,photo=false){
   if(!(photo?['image/jpeg','image/png']:['image/jpeg','image/png','application/pdf']).includes(file.type))return photo?'Photo must be JPG or PNG.':'Document must be PDF, JPG or PNG.';
   return '';
 }
-export function validateRegistrationStep(f:RegistrationForm,step:number,options:{aadhaarSaved:boolean;districtNames:string[];files:(File|null)[];savedFiles:string[];declarations:boolean[]}):FieldErrors{
+export function validateRegistrationStep(f:RegistrationForm,step:number,options:{aadhaarSaved:boolean;districtNames:string[];files:(File|null)[];savedFiles:string[];declarations:boolean[];passwordSaved?:boolean}):FieldErrors{
   const errors:FieldErrors={};
   const text=(key:keyof RegistrationForm,id:string,label:string,max:number)=>{
     if(!f[key].trim())errors[id]=`${label} is required.`;
@@ -47,10 +47,12 @@ export function validateRegistrationStep(f:RegistrationForm,step:number,options:
     });
   }
   if(step===4&&!['PREMIUM','ELITE'].includes(f.planCode))errors.plan='Choose a membership plan.';
-  if(step===5){
+  if((step===2||step===5)&&!options.passwordSaved){
     if(!f.password.trim()||f.password.length<8)errors.password='Password must contain at least 8 characters and cannot be blank.';
     else if(new TextEncoder().encode(f.password).length>72)errors.password='Password must not exceed 72 UTF-8 bytes.';
     if(f.password!==f.confirmPassword||!f.confirmPassword)errors['confirm-password']='Passwords must match.';
+  }
+  if(step===5){
     if(options.declarations.length!==6||!options.declarations.every(Boolean))errors.declarations='Read and accept all six declarations before submitting.';
   }
   return errors;

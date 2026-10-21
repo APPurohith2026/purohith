@@ -24,9 +24,10 @@ class RegistrationValidationServiceTest {
         assertFalse(validator.validate(personal(LocalDate.of(1990,1,1),"   ")).isEmpty());
         assertFalse(validator.validate(personal(LocalDate.of(1990,1,1),"a".repeat(141))).isEmpty());
     }
-    @Test void passwordsCannotBeMissingBlankShortOrExceedBcryptByteLimit(){
-        for(String password:new String[]{null,"        ","short","a".repeat(73),"అ".repeat(25)})
+    @Test void optionalFinalPasswordCannotBeBlankShortOrExceedBcryptByteLimit(){
+        for(String password:new String[]{"        ","short","a".repeat(73),"అ".repeat(25)})
             assertFalse(validator.validate(new DraftConfirmRequest(password,true)).isEmpty());
+        assertTrue(validator.validate(new DraftConfirmRequest(null,true)).isEmpty());
         assertTrue(validator.validate(new DraftConfirmRequest("GoodPassword123!",true)).isEmpty());
         assertFalse(validator.validate(new DraftConfirmRequest("GoodPassword123!",false)).isEmpty());
     }
@@ -45,7 +46,7 @@ class RegistrationValidationServiceTest {
         assertDoesNotThrow(()->rules.personal(RegistrationSource.MEMBER_REFERENCE,"AP-EGD-000001"));
     }
     @Test void rejectsInvalidPinAndUnsupportedSelections(){
-        var request=new DraftStep2Request("9000000001","9000000001","1","Town","City","East Godavari","000000","Andhra Pradesh");
+        var request=new DraftStep2Request("9000000001","9000000001","1","Town","City","East Godavari","000000","Andhra Pradesh",null);
         assertTrue(validator.validate(request).stream().anyMatch(e->e.getPropertyPath().toString().equals("pinCode")));
         var invalid=new DraftStep1Request("Name",RegistrationSource.DIRECT,null,"INVALID","Purohit","Gotram",null,LocalDate.of(1990,1,1),"123456789012","INVALID");
         assertEquals(2,validator.validate(invalid).size());

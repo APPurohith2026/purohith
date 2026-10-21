@@ -26,13 +26,14 @@ export async function fillStep2(page: Page, phone: string) {
   await expect(page.getByTestId('district')).toBeEnabled();
   await page.getByTestId('district').selectOption('Hyderabad');
   await page.getByTestId('pin-code').fill('500001');
+  if(await page.getByTestId('password').isVisible()){await page.getByTestId('password').fill('Test@12345');await page.getByTestId('confirm-password').fill('Test@12345')}
 }
 
 const nextStepReady: Record<number, string> = {
   1: 'phone-number',
   2: 'upload-01',
   3: 'plan-elite',
-  4: 'password',
+  4: 'confirm-submit',
 };
 
 export async function next(page: Page) {

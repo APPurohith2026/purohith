@@ -61,14 +61,6 @@ test(
     // 6. STEP 5 - PASSWORD + DECLARATION
     // ------------------------------------------------------------
 
-    await page
-      .getByTestId('password')
-      .fill(PASSWORD);
-
-    await page
-      .getByTestId('confirm-password')
-      .fill(PASSWORD);
-
     for (let i = 1; i <= 6; i++) {
       await page
         .getByTestId(`declaration-${i}`)
