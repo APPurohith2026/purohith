@@ -19,6 +19,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          cache: gradle
+          cache-dependency-path: 'mobile/android/**/*.gradle'
       - name: Install website dependencies
         run: npm ci --prefix frontend
       - name: Install Android app dependencies
