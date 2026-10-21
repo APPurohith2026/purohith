@@ -28,7 +28,7 @@ test('DOB keeps a four-digit year when filled or pasted and rejects future dates
   expect(requests).toBe(0);
   await date.fill('2000-02-29');
   await page.getByTestId('next-step').click();
-  await expect(page.getByTestId('phone-number')).toBeVisible();
+  await expect(page.getByTestId('whatsapp-number')).toBeVisible();
   expect(requests).toBe(1);
 });
 

@@ -25,6 +25,8 @@ export function validateRegistrationStep(f:RegistrationForm,step:number,options:
   };
   if(step===1){
     text('fullName','full-name','Full name',140);text('profession','profession','Profession',120);text('gotram','gotram','Gotram',120);
+    if(!/^[\p{L}][\p{L}\p{M} ]*$/u.test(f.gotram.trim()))errors.gotram='Gothram must contain letters and spaces only.';
+    if(!validPhone(f.phoneNumber))errors['phone-number']='Enter a valid phone number with 10 to 15 digits.';
     if(!['MALE','FEMALE','OTHER'].includes(f.gender))errors.gender='Choose a gender.';
     if(!validBirthDate(f.dateOfBirth))errors['date-of-birth']='Enter a valid date of birth with a four-digit year, no later than today.';
     if((!options.aadhaarSaved||f.aadhaarNumber)&&!/^[0-9]{12}$/.test(f.aadhaarNumber))errors['aadhaar-number']='Aadhaar number must contain exactly 12 digits.';
@@ -47,7 +49,7 @@ export function validateRegistrationStep(f:RegistrationForm,step:number,options:
     });
   }
   if(step===4&&!['PREMIUM','ELITE'].includes(f.planCode))errors.plan='Choose a membership plan.';
-  if((step===2||step===5)&&!options.passwordSaved){
+  if((step===1||step===5)&&!options.passwordSaved){
     if(!f.password.trim()||f.password.length<8)errors.password='Password must contain at least 8 characters and cannot be blank.';
     else if(new TextEncoder().encode(f.password).length>72)errors.password='Password must not exceed 72 UTF-8 bytes.';
     if(f.password!==f.confirmPassword||!f.confirmPassword)errors['confirm-password']='Passwords must match.';

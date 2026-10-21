@@ -84,7 +84,7 @@ export default function Register(){
     if(d.aadhaarMasked){setAadhaarSaved(true);setAadhaarMasked(d.aadhaarMasked)}
     setSavedDocs({aadhaarFrontName:d.aadhaarFrontName||'',aadhaarBackName:d.aadhaarBackName||'',passportPhotoName:d.passportPhotoName||''});
     setPasswordSaved(d.draftLoginReady===true);
-    setStep(d.lastCompletedStep>=2&&d.draftLoginReady===false?2:Math.min(5,(d.lastCompletedStep||0)+1));
+    setStep(d.draftLoginReady===false?1:Math.min(5,(d.lastCompletedStep||0)+1));
     setNotice('మునుపటి డ్రాఫ్ట్ వివరాలు తిరిగి లోడ్ అయ్యాయి.');
   }
 
@@ -102,7 +102,7 @@ export default function Register(){
     try{
       let d:DraftView;
       if(current===1){
-        const body={fullName:f.fullName,registrationSource:f.registrationSource,memberReferenceId:f.registrationSource==='MEMBER_REFERENCE'?f.memberReferenceId:'',gender:f.gender,profession:f.profession,gotram:f.gotram,dateOfBirth:f.dateOfBirth,aadhaarNumber:f.aadhaarNumber||'__KEEP__',bloodGroup:f.bloodGroup};
+        const body={fullName:f.fullName,registrationSource:f.registrationSource,memberReferenceId:f.registrationSource==='MEMBER_REFERENCE'?f.memberReferenceId:'',gender:f.gender,profession:f.profession,gotram:f.gotram,dateOfBirth:f.dateOfBirth,aadhaarNumber:f.aadhaarNumber||'__KEEP__',bloodGroup:f.bloodGroup,phoneNumber:f.phoneNumber,...(!passwordSaved?{password:f.password}:{})};
         if(!draftToken){const r=await api.post('/registration/drafts/start',body);d=r.data;setDraftToken(d.draftToken);localStorage.setItem(DRAFT_KEY,d.draftToken)}
         else d=(await api.put(`/registration/drafts/${draftToken}/step/1`,body)).data;
         if(f.aadhaarNumber){setAadhaarSaved(true);setAadhaarMasked('XXXX XXXX '+f.aadhaarNumber.slice(-4));set('aadhaarNumber','')}
@@ -117,14 +117,14 @@ export default function Register(){
           setAadhaarFront(null);setAadhaarBack(null);setPassportPhoto(null);
         }else if(current===4){d=(await api.put(`/registration/drafts/${draftToken}/step/4`,{planCode:f.planCode})).data}else return true;
       }
-      if(current===2)setPasswordSaved(true);
+      if(current===1||current===2)setPasswordSaved(true);
       setNotice('✓ వివరాలు సేవ్ చేయబడ్డాయి'); return true;
     }catch(x:any){setErr((x.response?.data?.errors?Object.values(x.response.data.errors).join(' '):x.response?.data?.message)||x.message||'వివరాలు సేవ్ కాలేదు. మళ్లీ ప్రయత్నించండి.');return false}finally{setSaving(false)}
   }
 
   async function next(){if(await saveStep(step))goStep(Math.min(5,step+1))}
   function back(){goStep(Math.max(1,step-1))}
-  async function saveAndExit(){if(step<5 && !(await saveStep(step)))return;setNotice(passwordSaved||step===2?'Draft saved. Resume later from Login with your phone number and password.':'Draft saved. Continue in this browser; save step 2 to enable phone and password login.');setTimeout(()=>nav('/'),500)}
+  async function saveAndExit(){if(step<5 && !(await saveStep(step)))return;setNotice(passwordSaved||step===1||step===2?'Draft saved. Resume later from Login with your phone number and password.':'Draft saved. Continue in this browser; save step 1 to enable phone and password login.');setTimeout(()=>nav('/'),500)}
 
   async function submit(e:FormEvent){
     e.preventDefault();if(saving)return;setErr('');
@@ -144,7 +144,7 @@ export default function Register(){
 
   return <section className="wizard-page auth-temple">
     <div className="wizard-heading"><span>కొత్త సభ్యత్వ నమోదు</span><h1>సభ్యత్వ దరఖాస్తు</h1><p>ప్రతి దశలో <b>తదుపరి</b> నొక్కినప్పుడు వివరాలు డేటాబేస్‌లో డ్రాఫ్ట్‌గా సేవ్ అవుతాయి. మధ్యలో నిష్క్రమించినా మళ్లీ ఇదే బ్రౌజర్‌లో కొనసాగించవచ్చు.</p></div>
-    <p>After saving step 2, use your phone number and password on the Login page to continue your draft on any device.</p>
+    <p>After saving step 1, use your phone number and password on the Login page to continue your draft on any device.</p>
     <div className="wizard-rail">{steps.map(([n,label],i)=>{const s=i+1;return <button type="button" key={n} className={(s===step?'active ':'')+(s<step?'complete':'')} onClick={()=>s<step&&goStep(s)}><b>{s<step?'✓':n}</b><span>{label}</span></button>})}</div>
 
     <form className="wizard-shell" onSubmit={submit}>
@@ -162,7 +162,7 @@ export default function Register(){
           <Field n="06" label="పుట్టిన తేదీ *" error={fieldErrors['date-of-birth']}><BirthDateInput data-testid="date-of-birth" value={f.dateOfBirth} onChange={value=>set('dateOfBirth',value)} onError={message=>setFieldErrors(errors=>({...errors,'date-of-birth':message}))}/></Field>
           <Field n="07" label="ఆధార్ సంఖ్య *" error={fieldErrors['aadhaar-number']}><input data-testid="aadhaar-number" inputMode="numeric" maxLength={12} value={f.aadhaarNumber} onChange={e=>set('aadhaarNumber',e.target.value.replace(/\D/g,''))} placeholder={aadhaarSaved?`${aadhaarMasked} — మార్చాలంటే కొత్త సంఖ్య నమోదు చేయండి`:'12 అంకెల ఆధార్ సంఖ్య'}/></Field>
           <Field n="08" label="రక్త గ్రూప్ *" error={fieldErrors['blood-group']}><select data-testid="blood-group" value={f.bloodGroup} onChange={e=>set('bloodGroup',e.target.value)}><option value="">రక్త గ్రూప్ ఎంచుకోండి</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(x=><option key={x}>{x}</option>)}</select></Field>
-        </div><StepActions first next={next} saveExit={saveAndExit} saving={saving}/>
+        </div><div className="account-block"><h3>Save your registration login</h3><p>Set a password now. If registration is interrupted, use your phone number and this password on the login page to continue on any device. Your permanent member ID is created after final submission.</p><Field n="01" label="మొబైల్ నంబర్ *" error={fieldErrors['phone-number']}><input data-testid="phone-number" maxLength={25} inputMode="tel" value={f.phoneNumber} onChange={e=>set('phoneNumber',e.target.value.replace(/[^0-9+ -]/g,''))} placeholder="Login కోసం మొబైల్ నంబర్"/></Field>{passwordSaved?<p>Your registration password is already saved.</p>:<div className="registration-fields compact"><Field n="01" label="పాస్‌వర్డ్ *" error={fieldErrors['password']}><input data-testid="password" maxLength={72} type="password" minLength={8} value={f.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password"/></Field><Field n="02" label="పాస్‌వర్డ్ నిర్ధారించండి *" error={fieldErrors['confirm-password']}><input data-testid="confirm-password" maxLength={72} type="password" minLength={8} value={f.confirmPassword} onChange={e=>set('confirmPassword',e.target.value)} autoComplete="new-password"/></Field></div>}</div><StepActions first next={next} saveExit={saveAndExit} saving={saving}/>
       </section>}
 
       {step===2&&<section className="wizard-card">
@@ -176,7 +176,7 @@ export default function Register(){
           <Field n="06" label="రాష్ట్రం *" error={fieldErrors['state']}><select data-testid="state" value={f.state} onChange={e=>setF(x=>({...x,state:e.target.value,district:''}))}><option value="">రాష్ట్రం ఎంచుకోండి</option><option>Andhra Pradesh</option><option>Telangana</option></select></Field>
           <Field n="07" label="జిల్లా *" error={fieldErrors['district']}><select data-testid="district" value={f.district} disabled={!f.state} onChange={e=>set('district',e.target.value)}><option value="">జిల్లా ఎంచుకోండి</option>{districtOptions.map(d=><option key={d.code} value={d.name}>{d.name}</option>)}</select></Field>
           <Field n="08" label="పిన్ కోడ్ *" error={fieldErrors['pin-code']}><input data-testid="pin-code" inputMode="numeric" maxLength={6} value={f.pinCode} onChange={e=>set('pinCode',e.target.value.replace(/\D/g,''))} placeholder="6 అంకెల PIN కోడ్"/></Field>
-        </div><div className="account-block"><h3>Save your registration login</h3><p>Set a password now. If registration is interrupted, use your phone number and this password on the login page to continue on any device. Your permanent member ID is created after final submission.</p>{passwordSaved?<p>Your registration password is already saved.</p>:<div className="registration-fields compact"><Field n="01" label="పాస్‌వర్డ్ *" error={fieldErrors['password']}><input data-testid="password" maxLength={72} type="password" minLength={8} value={f.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password"/></Field><Field n="02" label="పాస్‌వర్డ్ నిర్ధారించండి *" error={fieldErrors['confirm-password']}><input data-testid="confirm-password" maxLength={72} type="password" minLength={8} value={f.confirmPassword} onChange={e=>set('confirmPassword',e.target.value)} autoComplete="new-password"/></Field></div>}</div><StepActions back={back} next={next} saveExit={saveAndExit} saving={saving}/>
+        </div><StepActions back={back} next={next} saveExit={saveAndExit} saving={saving}/>
       </section>}
 
       {step===3&&<section className="wizard-card">
@@ -202,7 +202,7 @@ export default function Register(){
           <Review title="పత్రాలు" edit={()=>goStep(3)} rows={[["ఆధార్ ముందు",savedDocs.aadhaarFrontName||'Uploaded'],["ఆధార్ వెనుక",savedDocs.aadhaarBackName||'Uploaded'],["పాస్‌పోర్ట్ ఫోటో",savedDocs.passportPhotoName||'Uploaded']]}/>
           <Review title="సభ్యత్వం" edit={()=>goStep(4)} rows={[["పథకం",f.planCode||'—']]}/>
         </div>
-        <div className="account-block"><h3>లాగిన్ వివరాలు</h3><p className="muted">నమోదు పూర్తయిన తర్వాత మొబైల్ నంబర్ + పాస్‌వర్డ్‌తో login చేయవచ్చు. Admin approval తర్వాత Generated Member ID + అదే పాస్‌వర్డ్‌తో కూడా login చేయవచ్చు.</p><p>Your password was saved in step 2. Use the same phone number and password to resume this draft or log in after submission.</p>
+        <div className="account-block"><h3>లాగిన్ వివరాలు</h3><p className="muted">నమోదు పూర్తయిన తర్వాత మొబైల్ నంబర్ + పాస్‌వర్డ్‌తో login చేయవచ్చు. Admin approval తర్వాత Generated Member ID + అదే పాస్‌వర్డ్‌తో కూడా login చేయవచ్చు.</p><p>Your password was saved in step 1. Use the same phone number and password to resume this draft or log in after submission.</p>
           <div className="declaration-panel"><h3>ప్రకటన / Declaration</h3><p>క్రింది ప్రతి అంశాన్ని పూర్తిగా చదివి అంగీకరించిన తర్వాత మాత్రమే నమోదు పూర్తి చేయండి.</p>{[
             'నేను బ్రాహ్మణ సామాజిక వర్గానికి చెందినవాడినై, పురోహిత వృత్తిలో ఉన్నాను.','అవి అవాస్తవమని తెలిసిన యెడల సమాఖ్య తీసుకునే చర్యలకు బాధ్యత వహించగలవాడను.','నేను సమాఖ్య నిర్ణయములు శిరసావహించి నియమ నిబంధనలకు కట్టుబడి ఉంటూ గుర్తింపు కార్డును దుర్వినియోగం చేయనని నిర్ధారణ చేయుచున్నాను.','సమాఖ్య యొక్క లక్ష్యాలకు ఆకర్షితుడినై నా పూర్తి సమ్మతముతో ఎటువంటి వత్తిడి లేదా ప్రమేయం లేకుండా నేను సభ్యుడిగా చేరుచున్నాను.','నా యొక్క వివరములు ఏవైనా ఉపాధి మరియు సమాఖ్య యొక్క సమాచార నిమిత్తమై ఉపయోగం కోసం నా పూర్తి అంగీకారం తెలుపుచున్నాను.','పైన తెలిపిన వివరాలు వాస్తవమని నిర్ధారణ చేయుచున్నాను.'
           ].map((text,i)=><label className="declaration-item" key={i}><input data-testid={`declaration-${i+1}`} type="checkbox" checked={declarationChecks[i]} onChange={e=>setDeclarationChecks(x=>x.map((v,idx)=>idx===i?e.target.checked:v))}/><span><b>{i+1}.</b> {text}</span></label>)}</div>

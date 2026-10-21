@@ -140,6 +140,10 @@ public class RegistrationController {
   private void complete(RegistrationDraft d,int step){ d.setLastCompletedStep(Math.max(d.getLastCompletedStep()==null?0:d.getLastCompletedStep(),step)); }
   private void applyStep1(RegistrationDraft d,DraftStep1Request r){
     validation.personal(r.registrationSource(),r.memberReferenceId());
+    String phone=validation.phone(r.phoneNumber()!=null?r.phoneNumber():d.getPhoneNumber());
+    if(users.existsByPhoneNumber(phone)) throw new IllegalArgumentException("Mobile number already registered");
+    draftLogin.configure(d,phone,r.password());d.setPhoneNumber(phone);
+
     RegistrationSource source=r.registrationSource()==null?RegistrationSource.DIRECT:r.registrationSource();
     String reference=r.memberReferenceId()==null?null:r.memberReferenceId().trim().toUpperCase();
     if(source==RegistrationSource.MEMBER_REFERENCE){

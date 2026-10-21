@@ -14,9 +14,12 @@ export async function fillStep1(page: Page, aadhaar: string) {
   await page.getByTestId('date-of-birth').fill('1990-01-15');
   await page.getByTestId('aadhaar-number').fill(aadhaar);
   await page.getByTestId('blood-group').selectOption('O+');
+  await page.getByTestId('phone-number').fill(uniqueDigits(10));
+  if(await page.getByTestId('password').isVisible()){await page.getByTestId('password').fill('Test@12345');await page.getByTestId('confirm-password').fill('Test@12345')}
 }
 
 export async function fillStep2(page: Page, phone: string) {
+  await expect(page.getByTestId('whatsapp-number')).toBeVisible();
   await page.getByTestId('phone-number').fill(phone);
   await page.getByTestId('whatsapp-number').fill(phone);
   await page.getByTestId('door-number').fill('1-23');

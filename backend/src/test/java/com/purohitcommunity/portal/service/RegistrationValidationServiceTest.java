@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class RegistrationValidationServiceTest {
     final Validator validator=Validation.buildDefaultValidatorFactory().getValidator();
     final RegistrationValidationService rules=new RegistrationValidationService(validator,new MemberIdService());
-    DraftStep1Request personal(LocalDate date,String name){return new DraftStep1Request(name,RegistrationSource.DIRECT,null,"MALE","Purohit","Bharadwaja",null,date,"123456789012","O+");}
+    DraftStep1Request personal(LocalDate date,String name){return new DraftStep1Request(name,RegistrationSource.DIRECT,null,"MALE","Purohit","Bharadwaja",null,date,"123456789012","O+",null,null);}
 
     @Test void datesRequireFourDigitYearAndCannotBeInTheFuture(){
         for(LocalDate date:new LocalDate[]{LocalDate.of(999,1,1),LocalDate.of(10000,1,1),LocalDate.now().plusDays(1)})
@@ -48,7 +48,17 @@ class RegistrationValidationServiceTest {
     @Test void rejectsInvalidPinAndUnsupportedSelections(){
         var request=new DraftStep2Request("9000000001","9000000001","1","Town","City","East Godavari","000000","Andhra Pradesh",null);
         assertTrue(validator.validate(request).stream().anyMatch(e->e.getPropertyPath().toString().equals("pinCode")));
-        var invalid=new DraftStep1Request("Name",RegistrationSource.DIRECT,null,"INVALID","Purohit","Gotram",null,LocalDate.of(1990,1,1),"123456789012","INVALID");
+        var invalid=new DraftStep1Request("Name",RegistrationSource.DIRECT,null,"INVALID","Purohit","Gotram",null,LocalDate.of(1990,1,1),"123456789012","INVALID",null,null);
         assertEquals(2,validator.validate(invalid).size());
+    }
+    @Test void gothramAcceptsLettersAndRejectsNumbersAndSymbols(){
+        for(String gotram:new String[]{"Bharadwaja","Kashyapa Gothram","భరద్వాజ"}){
+            var request=new DraftStep1Request("Member",RegistrationSource.DIRECT,null,"MALE","Purohit",gotram,null,LocalDate.of(1990,1,1),"123456789012","O+",null,null);
+            assertTrue(validator.validate(request).isEmpty(),gotram);
+        }
+        for(String gotram:new String[]{"123","Bharadwaja1","Kashyapa@","౧౨౩"}){
+            var request=new DraftStep1Request("Member",RegistrationSource.DIRECT,null,"MALE","Purohit",gotram,null,LocalDate.of(1990,1,1),"123456789012","O+",null,null);
+            assertFalse(validator.validate(request).isEmpty(),gotram);
+        }
     }
 }

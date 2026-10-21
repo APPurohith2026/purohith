@@ -17,7 +17,7 @@ public class DraftLoginService {
  public String passwordHashForSubmission(RegistrationDraft draft,String password){
   if(draft.getPasswordHash()!=null)return draft.getPasswordHash();
   if(password==null || password.isBlank() || password.length()<8 || password.getBytes(java.nio.charset.StandardCharsets.UTF_8).length>72)
-   throw new IllegalArgumentException("Return to step 2 and set your registration password");
+   throw new IllegalArgumentException("Return to step 1 and set your registration password");
   return encoder.encode(password);
  }
  public void configure(RegistrationDraft draft,String phone,String password){

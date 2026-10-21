@@ -17,7 +17,7 @@ public final class ApiDtos {
       @Size(max=40) String memberReferenceId,
       @NotBlank @Pattern(regexp="MALE|FEMALE|OTHER", message="Choose a valid gender") String gender,
       @NotBlank @Size(max=120) String profession,
-      @NotBlank @Size(max=120) String gotram,
+      @NotBlank @Pattern(regexp="\\p{L}[\\p{L}\\p{M} ]*", message="Gothram must contain letters and spaces only") @Size(max=120) String gotram,
       @Size(max=220) String pravara,
       @NotNull @BirthDate LocalDate dateOfBirth,
       @NotBlank @Pattern(regexp="\\d{12}", message="Aadhaar number must contain 12 digits") String aadhaarNumber,
@@ -42,11 +42,13 @@ public final class ApiDtos {
       @Size(max=40) String memberReferenceId,
       @NotBlank @Pattern(regexp="MALE|FEMALE|OTHER", message="Choose a valid gender") String gender,
       @NotBlank @Size(max=120) String profession,
-      @NotBlank @Size(max=120) String gotram,
+      @NotBlank @Pattern(regexp="\\p{L}[\\p{L}\\p{M} ]*", message="Gothram must contain letters and spaces only") @Size(max=120) String gotram,
       @Size(max=220) String pravara,
       @NotNull @BirthDate LocalDate dateOfBirth,
       @NotBlank @Pattern(regexp="(?:\\d{12}|__KEEP__)", message="Aadhaar number must contain 12 digits") String aadhaarNumber,
-      @NotBlank @Pattern(regexp="(?:A|B|AB|O)[+-]", message="Choose a valid blood group") String bloodGroup
+      @NotBlank @Pattern(regexp="(?:A|B|AB|O)[+-]", message="Choose a valid blood group") String bloodGroup,
+      @Pattern(regexp="[0-9+ -]{10,25}", message="Invalid mobile number") String phoneNumber,
+      @PasswordBytes @Pattern(regexp="(?s).*\\S.*", message="Password cannot be blank") @Size(min=8,max=72) String password
   ) {}
   public record DraftStep2Request(
       @NotBlank @Pattern(regexp="[0-9+ -]{10,25}", message="Invalid mobile number") String phoneNumber,
@@ -75,7 +77,7 @@ public final class ApiDtos {
 
   public record LoginRequest(@NotBlank String identifier, @NotBlank String password) {}
   public record AuthResponse(String token, String role, String loginId, String memberNumber) {}
-  public record ProfileUpdateRequest(@NotBlank String fullName, LocalDate dateOfBirth, String gender, String profession, String gotram, String pravara) {}
+  public record ProfileUpdateRequest(@NotBlank String fullName, LocalDate dateOfBirth, String gender, String profession, @Pattern(regexp="\\p{L}[\\p{L}\\p{M} ]*", message="Gothram must contain letters and spaces only") @Size(max=120) String gotram, String pravara) {}
   public record EnrollmentRequest(@NotNull PlanCode planCode) {}
   public record PlanView(Long id, PlanCode code, String nameTelugu, String nameEnglish, BigDecimal price, Integer validityMonths) {}
   public record MemberView(

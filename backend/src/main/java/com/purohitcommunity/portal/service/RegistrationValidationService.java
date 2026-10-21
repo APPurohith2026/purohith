@@ -25,7 +25,7 @@ public class RegistrationValidationService {
     public void location(String state,String district){memberIds.validateLocation(state,district);}
     public void validateDraft(RegistrationDraft d){
         if(d.getAadhaarNumber()==null || !d.getAadhaarNumber().matches("[0-9]{12}")) throw new IllegalArgumentException("Enter a 12-digit Aadhaar number");
-        validate(new DraftStep1Request(d.getFullName(),d.getRegistrationSource(),d.getMemberReferenceId(),d.getGender(),d.getProfession(),d.getGotram(),d.getPravara(),d.getDateOfBirth(),d.getAadhaarNumber(),d.getBloodGroup()));
+        validate(new DraftStep1Request(d.getFullName(),d.getRegistrationSource(),d.getMemberReferenceId(),d.getGender(),d.getProfession(),d.getGotram(),d.getPravara(),d.getDateOfBirth(),d.getAadhaarNumber(),d.getBloodGroup(),null,null));
         validate(new DraftStep2Request(d.getPhoneNumber(),d.getWhatsappNumber(),d.getDoorNumber(),d.getCityTown(),d.getConstituency(),d.getDistrict(),d.getPinCode(),d.getState(),null));
         personal(d.getRegistrationSource(),d.getMemberReferenceId());
         phone(d.getPhoneNumber());phone(d.getWhatsappNumber());location(d.getState(),d.getDistrict());
