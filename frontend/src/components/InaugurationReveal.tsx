@@ -10,7 +10,7 @@ export function shouldShowInauguration(pathname:string){
 export function markInaugurationSeen(){try{sessionStorage.setItem(SEEN_KEY,'yes')}catch{}}
 export default function InaugurationReveal({onClose}:{onClose:()=>void}){
  const video=useRef<HTMLVideoElement>(null),skip=useRef<HTMLButtonElement>(null);
- const [sound,setSound]=useState(false),[needsPlay,setNeedsPlay]=useState(false);
+ const [sound,setSound]=useState(true),[needsPlay,setNeedsPlay]=useState(false);
  useEffect(()=>{
   let active=true;
   skip.current?.focus();
@@ -23,12 +23,13 @@ export default function InaugurationReveal({onClose}:{onClose:()=>void}){
  },[onClose]);
  async function playWithSound(){
   const media=video.current;if(!media)return;
-  media.muted=sound;setSound(!sound);
+  const nextSound=needsPlay?true:!sound;
+  media.muted=!nextSound;setSound(nextSound);
   try{await media.play();setNeedsPlay(false)}catch{setNeedsPlay(true)}
  }
  return <section className="inauguration-reveal" role="dialog" aria-modal="true" aria-labelledby="inauguration-title">
   <header><h1 id="inauguration-title">AP Brahmana Purohit Samakya</h1><button ref={skip} className="reveal-skip" onClick={onClose}>Skip / Continue to website</button></header>
-  <video ref={video} className="inauguration-video" src="/videos/inauguration-logo-reveal.mp4" autoPlay muted playsInline preload="auto" onEnded={onClose} onError={onClose} aria-label="Inauguration logo reveal"/>
+  <video ref={video} className="inauguration-video" src="/videos/inauguration-logo-reveal.mp4" autoPlay muted={!sound} playsInline preload="auto" onPlaying={()=>setNeedsPlay(false)} onEnded={onClose} onError={onClose} aria-label="Inauguration logo reveal"/>
   <button className="reveal-sound" onClick={()=>void playWithSound()}>{needsPlay?'Play reveal with sound':sound?'Mute video':'Enable video sound'}</button>
  </section>
 }

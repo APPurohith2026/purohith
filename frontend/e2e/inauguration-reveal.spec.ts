@@ -29,3 +29,21 @@ test('a stalled video times out without blocking the site',async({page})=>{
  await page.clock.install({time:TODAY});await page.route('**/videos/inauguration-logo-reveal.mp4',r=>new Promise(()=>{}));
  await page.goto('/',{waitUntil:'domcontentloaded'});await expect(page.getByRole('dialog')).toBeVisible();await page.clock.runFor(31000);await expect(page.locator('.home-hero')).toBeVisible();
 });
+
+test('audio defaults on and a blocked autoplay starts with sound after one tap',async({page})=>{
+ await page.clock.install({time:TODAY});await page.route('**/videos/inauguration-logo-reveal.mp4',r=>new Promise(()=>{}));
+ await page.addInitScript(()=>{
+  let allowed=false;document.addEventListener('click',()=>{allowed=true},{capture:true});
+  Object.defineProperty(HTMLMediaElement.prototype,'play',{configurable:true,value:()=>allowed?Promise.resolve():Promise.reject(new DOMException('Tap required','NotAllowedError'))});
+ });
+ await page.goto('/',{waitUntil:'domcontentloaded'});
+ const video=page.locator('.inauguration-video');
+ await expect(page.getByRole('button',{name:'Play reveal with sound'})).toBeVisible();
+ expect(await video.evaluate((v:HTMLVideoElement)=>v.muted)).toBe(false);
+ await page.getByRole('button',{name:'Play reveal with sound'}).click();
+ await expect(page.getByRole('button',{name:'Mute video'})).toBeVisible();expect(await video.evaluate((v:HTMLVideoElement)=>v.muted)).toBe(false);
+ await page.getByRole('button',{name:'Mute video'}).click();
+ expect(await video.evaluate((v:HTMLVideoElement)=>v.muted)).toBe(true);
+ await page.getByRole('button',{name:'Enable video sound'}).click();
+ expect(await video.evaluate((v:HTMLVideoElement)=>v.muted)).toBe(false);
+});
