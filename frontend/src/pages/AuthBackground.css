@@ -74,3 +74,84 @@
     padding: 20px 16px;
   }
 }
+
+/* Keep the step navigation aligned with the registration heading and form. */
+.auth-temple.wizard-page .wizard-rail {
+  --step-circle-size: 44px;
+  width: 100%;
+  max-width: 1180px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+}
+.auth-temple.wizard-page .wizard-rail::before {
+  display: none;
+}
+.auth-temple.wizard-page .wizard-rail button {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+.auth-temple.wizard-page .wizard-rail button:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  height: 2px;
+  top: calc(var(--step-circle-size) / 2 - 1px);
+  left: calc(50% + var(--step-circle-size) / 2);
+  width: calc(100% - var(--step-circle-size));
+  background: #ecc89c;
+  pointer-events: none;
+}
+.auth-temple.wizard-page .wizard-rail b {
+  width: var(--step-circle-size);
+  height: var(--step-circle-size);
+  flex: 0 0 var(--step-circle-size);
+  margin: 0;
+}
+.auth-temple.wizard-page .wizard-rail span {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 5px;
+  font-size: clamp(10px, 1.2vw, 15px);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .auth-temple.wizard-page .wizard-rail {
+    --step-circle-size: 34px;
+    padding-inline: 6px;
+  }
+  .auth-temple.wizard-page .wizard-rail span {
+    padding-inline: 2px;
+  }
+}
+
+.auth-temple.wizard-page .reg-field {
+  min-width: 0;
+  grid-template-columns: 38px minmax(0, 1fr);
+}
+.auth-temple.wizard-page .reg-field > input,
+.auth-temple.wizard-page .reg-field > select {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+.auth-temple.wizard-page .reg-field > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.auth-temple.wizard-page .account-block,
+.auth-temple.wizard-page .registration-fields {
+  min-width: 0;
+}
+@media (min-width: 901px) {
+  .auth-temple.wizard-page .registration-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .auth-temple.wizard-page .reg-field {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+}
