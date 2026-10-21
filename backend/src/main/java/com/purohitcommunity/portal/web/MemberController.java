@@ -13,6 +13,10 @@ import java.util.*;
 @RestController @RequestMapping("/api/member") @RequiredArgsConstructor
 public class MemberController {
   private final PortalService portal; private final QrCodeService qr;
+  private final com.purohitcommunity.portal.service.MembershipPaymentService payments;
+  public record PaymentReferenceRequest(@jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max=64) String reference) {}
+  @GetMapping("/payment") public com.purohitcommunity.portal.service.MembershipPaymentService.PaymentView payment(Authentication a){ return payments.get(portal.current(a.getName()).getId()); }
+  @PostMapping("/payment") public com.purohitcommunity.portal.service.MembershipPaymentService.PaymentView payment(Authentication a,@Valid @RequestBody PaymentReferenceRequest r){ return payments.submit(portal.current(a.getName()).getId(),r.reference()); }
   private final com.purohitcommunity.portal.storage.PrivateFileStorageService storage;
   @GetMapping("/passport-photo") public ResponseEntity<byte[]> passportPhoto(Authentication a){ return storage.passportPhoto(portal.current(a.getName()).getPassportPhotoPath()); }
   @Value("${PUBLIC_WEB_URL:http://localhost:5173}") private String publicWebUrl;

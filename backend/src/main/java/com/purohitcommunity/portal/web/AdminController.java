@@ -10,6 +10,10 @@ import java.util.*;
 @RestController @RequestMapping("/api/admin") @RequiredArgsConstructor
 public class AdminController {
   private final PortalService portal;
+  private final com.purohitcommunity.portal.service.MembershipPaymentService payments;
+  public record PaymentReviewRequest(@jakarta.validation.constraints.NotNull Boolean received, @jakarta.validation.constraints.NotBlank String reference) {}
+  @GetMapping("/members/{id}/payment") public com.purohitcommunity.portal.service.MembershipPaymentService.PaymentView payment(@PathVariable Long id){ return payments.get(id); }
+  @PatchMapping("/members/{id}/payment") public com.purohitcommunity.portal.service.MembershipPaymentService.PaymentView payment(@PathVariable Long id,@Valid @RequestBody PaymentReviewRequest r){ return payments.review(id,r.received(),r.reference()); }
   private final com.purohitcommunity.portal.storage.PrivateFileStorageService storage;
   @GetMapping("/members/{id}/passport-photo") public org.springframework.http.ResponseEntity<byte[]> passportPhoto(@PathVariable Long id){ return storage.passportPhoto(portal.member(id).passportPhotoPath()); }
   @GetMapping("/members/{id}/documents/{type}")

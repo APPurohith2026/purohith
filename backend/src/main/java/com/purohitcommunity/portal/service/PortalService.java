@@ -58,7 +58,13 @@ public class PortalService {
   @Transactional public MemberView enroll(String email, EnrollmentRequest r){
     var m=current(email); var p=plans.findByCode(r.planCode()).orElseThrow();
     var existing=memberships.findFirstByMemberIdOrderByIdDesc(m.getId()).orElse(null);
-    if(existing==null || existing.getStatus()!=MembershipStatus.ACTIVE){ memberships.save(Membership.builder().member(m).plan(p).status(MembershipStatus.PENDING).build()); }
+    if(!p.isActive()) throw new IllegalArgumentException("This plan is not available");
+    if(existing!=null && existing.getStatus()==MembershipStatus.ACTIVE) throw new IllegalStateException("You already have an active membership");
+    if(existing!=null && existing.getStatus()==MembershipStatus.PENDING){
+      if(existing.getPlan().getCode()!=p.getCode()) throw new IllegalStateException("Contact admin to change your selected plan before paying");
+      return memberView(m);
+    }
+    memberships.save(Membership.builder().member(m).plan(p).status(MembershipStatus.PENDING).build());
     m.setApplicationStatus(ApplicationStatus.PENDING_REVIEW); m.setReviewComment(null); return memberView(members.save(m));
   }
 
@@ -91,6 +97,8 @@ public class PortalService {
     var ms=memberships.findFirstByMemberIdOrderByIdDesc(memberId).orElse(null);
     if(status==ApplicationStatus.APPROVED){
       if(ms==null) throw new IllegalStateException("No membership plan selected");
+      if(ms.getPaymentTrackingId()!=null && ms.getPaymentStatus()!=PaymentStatus.VERIFIED)
+        throw new IllegalStateException("Verify the membership payment before approval");
       LocalDate start=LocalDate.now(); ms.setStartDate(start); ms.setExpiryDate(start.plusMonths(ms.getPlan().getValidityMonths())); ms.setStatus(MembershipStatus.ACTIVE); ms.setApprovedAt(java.time.Instant.now());
       cards.findByMemberId(memberId).orElseGet(()->cards.save(DigitalIdCard.builder().member(m).qrToken(UUID.randomUUID().toString()).issuedOn(start).validUntil(ms.getExpiryDate()).active(true).build()));
     } else if(ms!=null && status==ApplicationStatus.REJECTED){

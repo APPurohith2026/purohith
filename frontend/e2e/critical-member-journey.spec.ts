@@ -115,6 +115,13 @@ test(
     // ------------------------------------------------------------
 
     await page.waitForURL('**/dashboard');
+    const paymentReference = `TEST${Date.now()}`;
+    const submittedPayment = await request.post(`${API}/member/payment`, {
+      headers: {Authorization: `Bearer ${confirmData.token}`},
+      data: {reference: paymentReference}
+    });
+    expect(submittedPayment.ok(), await submittedPayment.text()).toBeTruthy();
+
 
     await expect(
       page.locator('.member-number-line')
@@ -216,6 +223,13 @@ test(
     // ------------------------------------------------------------
     // 12. APPROVE MEMBER THROUGH ADMIN API
     // ------------------------------------------------------------
+
+    const blockedApproval = await request.patch(`${API}/admin/members/${member.id}/approve`, {headers: adminHeaders});
+    expect(blockedApproval.status()).toBe(400);
+    const verifiedPayment = await request.patch(`${API}/admin/members/${member.id}/payment`, {
+      headers: adminHeaders, data: {received: true, reference: paymentReference}
+    });
+    expect(verifiedPayment.ok(), await verifiedPayment.text()).toBeTruthy();
 
     const approve =
       await request.patch(

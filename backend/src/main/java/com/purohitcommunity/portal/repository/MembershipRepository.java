@@ -9,6 +9,9 @@ import java.util.Optional;
 public interface MembershipRepository extends JpaRepository<Membership,Long>{
   Optional<Membership> findFirstByMemberIdOrderByIdDesc(Long memberId);
   void deleteByMemberId(Long memberId);
+  @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+  Optional<Membership> findTopByMemberIdOrderByIdDesc(Long memberId);
+  boolean existsByPaymentReferenceAndIdNot(String paymentReference, Long id);
   long countByStatus(MembershipStatus status);
   @Query("select count(m) from Membership m where m.plan.code=:plan and m.status=:status")
   long countByPlanAndStatus(@Param("plan") PlanCode plan,@Param("status") MembershipStatus status);

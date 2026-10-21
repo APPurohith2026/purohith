@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AdminController.class)
 @Import({SecurityConfig.class,JwtAuthFilter.class})
 class AdminDocumentAccessTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean com.purohitcommunity.portal.service.MembershipPaymentService payments;
     @Autowired MockMvc mvc;
     @MockitoBean PortalService portal;
     @MockitoBean PrivateFileStorageService storage;

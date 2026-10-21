@@ -1,3 +1,4 @@
+import {PaymentQr} from '../components/MembershipPayment';
 import './RegistrationValidation.css';
 import BirthDateInput from '../components/BirthDateInput';
 import {validateRegistrationStep,uploadError,type RegistrationForm,type FieldErrors} from '../services/registrationValidation';
@@ -168,7 +169,7 @@ export default function Register(){
 
       {step===4&&<section className="wizard-card">
         <Title icon={<IdCard/>} telugu="సభ్యత్వం ఎంచుకోండి" english="Membership Plan" step="దశ 4 / 5"/>
-        <div className="registration-plan-grid">{plans.map(p=><label key={p.code} className={'registration-plan '+(f.planCode===p.code?'selected ':'')+(p.code==='ELITE'?'elite-option':'')}><input data-testid={`plan-${p.code.toLowerCase()}`} type="radio" name="plan" value={p.code} checked={f.planCode===p.code} onChange={()=>set('planCode',p.code)}/><span className="plan-icon">{p.code==='ELITE'?'★':'♛'}</span><h3>{p.nameTelugu}</h3><strong>₹{Number(p.price).toLocaleString('en-IN')}</strong><small>{p.validityMonths} నెలల సభ్యత్వం</small><span className="choose"><CheckCircle2/> ఈ సభ్యత్వాన్ని ఎంచుకోండి</span></label>)}</div>
+        <div className="registration-plan-grid">{plans.map(p=><label key={p.code} className={'registration-plan '+(f.planCode===p.code?'selected ':'')+(p.code==='ELITE'?'elite-option':'')}><input data-testid={`plan-${p.code.toLowerCase()}`} type="radio" name="plan" value={p.code} checked={f.planCode===p.code} onChange={()=>set('planCode',p.code)}/><span className="plan-icon">{p.code==='ELITE'?'★':'♛'}</span><h3>{p.nameTelugu}</h3><strong>₹{Number(p.price).toLocaleString('en-IN')}</strong><small>{p.validityMonths} నెలల సభ్యత్వం</small><span className="choose"><CheckCircle2/> ఈ సభ్యత్వాన్ని ఎంచుకోండి</span></label>)}</div>{f.planCode&&<><h3>Payment by UPI</h3><p>After submitting registration, your dashboard will show a payment tracking ID and a field to enter your UPI transaction reference. Membership activates after admin verifies payment.</p><PaymentQr/></>}
         <StepActions back={back} next={next} saveExit={saveAndExit} saving={saving}/>
       </section>}
 
